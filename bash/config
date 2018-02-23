@@ -74,7 +74,7 @@ fi
 CHRUBY_PATH=/usr/local/share/chruby/chruby.sh
 if [ -f $CHRUBY_PATH ]; then
   source $CHRUBY_PATH
-  chruby 2.2.0
+  chruby 2.4.0
 fi
 
 #vi mode by default
