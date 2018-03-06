@@ -1,0 +1,79 @@
+function __awless_show {
+  local lock_file
+  lock_file="/tmp/awless-show.lock"
+  [[ -f "${lock_file}" ]] && return
+  awless show --silent --local --siblings --color=always $1 2> /dev/null
+  if [[ "$?" -ne 0 ]]; then
+    touch "${lock_file}" &> /dev/null
+    awless sync --silent --infra 2> /dev/null
+    rm -f "${lock_file}" &> /dev/null
+    awless show --silent --local --siblings --color=always $1 2> /dev/null
+  fi
+}
+typeset -fx __awless_show
+
+function ec2sh {
+  local profile
+
+  profile="$1"
+
+  if [[ -n "$profile" ]]; then
+    export AWS_DEFAULT_PROFILE="$profile"
+  elif [[ -n "${AWS_DEFAULT_PROFILE}" ]]; then
+    profile="${AWS_DEFAULT_PROFILE}"
+  fi
+
+  shift
+
+  local target
+  local instance_id
+  local ssh_command
+  local ssh_command_flags
+
+  target=($(awless ls instances --silent --format tsv --no-headers \
+                   --sort name,uptime --filter state=running |
+            cut -f 1,3,6,7 |
+            fzf --sync --no-hscroll --tabstop=1 -d $'\t' -n 1,2 \
+                --expect=alt-enter \
+                --preview-window right:60%:wrap \
+                --preview '__awless_show {1}' \
+                --prompt " ${profile} ❯ " --ansi -q "$*")) || return
+  if [[ ${target[0]} = 'alt-enter' ]]; then
+      instance_id="${target[1]}"
+      ssh_command_flags=''
+  else
+      instance_id="${target[0]}"
+      ssh_command_flags='--private'
+  fi
+  echo "Logging on ${instance_id} on ${profile}"
+  echo
+  awless ssh ${instance_id}
+}
+
+function __ec2sh_profile_is_invalid {
+    [[ "$(__ec2sh_list_profiles | grep "    ")" =~ (^|[[:space:]])$1($|[[:space:]]) ]] && return 0 || return 1
+}
+
+function __ec2sh_comp {
+    local cur prev
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    [[ "${COMP_CWORD}" -eq 2 ]] && return 0
+
+    local profile_list="$(__ec2sh_list_profiles | grep "    ")"
+    COMPREPLY=( $(compgen -W "${profile_list}" -- ${cur}) )
+
+    return 0
+}
+
+function __ec2sh_list_profiles {
+    local credentials_list="$((egrep '^\[ *[a-zA-Z0-9_-]+ *\]$' ~/.aws/credentials 2>/dev/null; grep "\[profile" ~/.aws/config 2>/dev/null | sed "s|\[profile |\[|g") | sort | uniq)";
+
+    for profile in ${credentials_list};
+    do
+        echo "    $(echo ${profile} | tr -d "[]")";
+    done;
+}
+
+complete -F __ec2sh_comp ec2sh

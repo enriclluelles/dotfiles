@@ -47,3 +47,7 @@ function pubfrompem {
 function sshpubfrompem {
   ssh-keygen -y -f $1
 }
+
+my_dir="$(dirname "${BASH_SOURCE[0]}")"
+
+source "$my_dir/ec2sh"
