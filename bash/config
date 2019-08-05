@@ -35,18 +35,6 @@ shopt -s histappend                      # append to history, don't overwrite it
 # Append to the history after each command finishes
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 
-for file in "/usr/local/Cellar/vim/*/share/vim/vim74"; do
-  last=$file
-done
-
-if [ ! -d $last ]; then
-  for file in "/usr/local/Cellar/macvim/*/MacVim.app/Contents/Resources/vim/runtime"; do
-    last=$file
-  done
-fi
-
-export VIMRUNTIME=$last
-
 # Uncomment this if you want the history reloaded right away
 # Keep in mind that pressing the up arrow can not give you the last
 # command used. Most of the time, it's more pracical to only reload when a new
@@ -74,7 +62,7 @@ fi
 CHRUBY_PATH=/usr/local/share/chruby/chruby.sh
 if [ -f $CHRUBY_PATH ]; then
   source $CHRUBY_PATH
-  chruby 2.4.0
+  chruby 2.4.1
 fi
 
 #vi mode by default

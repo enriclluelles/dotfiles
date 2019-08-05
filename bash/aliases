@@ -76,10 +76,16 @@ alias mongorun="/usr/local/bin/mongod run --config "$last
 alias tunnel='ssh -D 8080 -f -C -q -N'
 
 alias superkill='pkill -s9 -f'
-
 # ubuntu resets path when sudoing
 alias sudo='sudo env PATH=$PATH'
 
+alias vim='nvim'
 alias vimnone='vim -u NONE'
+alias findcwd='pgrep -f | xargs lsof -p  | grep cwd'
 
 alias docker_killall='docker rm -f $(docker ps -a -q)'
+
+# Use kubectl provided with docker for desktop if not present
+if [[ -x "$(command -v kubectl)" ]]; then
+  alias kubectl=kubectl.docker
+fi

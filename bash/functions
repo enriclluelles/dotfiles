@@ -48,6 +48,10 @@ function sshpubfrompem {
   ssh-keygen -y -f $1
 }
 
+function findcwd {
+  pgrep -f $1 | xargs lsof -p  | grep cwd
+}
+
 my_dir="$(dirname "${BASH_SOURCE[0]}")"
 
 source "$my_dir/ec2sh"
