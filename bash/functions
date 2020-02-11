@@ -52,6 +52,10 @@ function findcwd {
   pgrep -f $1 | xargs lsof -p  | grep cwd
 }
 
+# https://github.com/jay0lee/GAM
+# Gsuite CLI
+gam() { "/Users/enric/bin/gam/gam" "$@" ; }
+
 my_dir="$(dirname "${BASH_SOURCE[0]}")"
 
 source "$my_dir/ec2sh"
