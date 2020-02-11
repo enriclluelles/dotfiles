@@ -1,31 +1,41 @@
 " PLUG
 call plug#begin('~/.config/nvim/plugged')
 
-  Plug 'dense-analysis/ale'
-  let g:ale_sign_error = 'E'
-  let g:ale_sign_warning = '!'
-  let g:airline#extensions#ale#enabled = 1 " Integrate with vim-airline
-  let g:ale_lint_on_text_changed = 'never' " Do not run when text changes
-  let g:ale_sign_column_always = 1         " Always show the sign column
-  let g:ale_linter_aliases = {
-        \ 'typescriptreact': 'typescript',
-        \ 'javascriptreact': 'javascript'
-        \}
-  let g:ale_linters = {
-        \ 'javascript': ['eslint', 'flow-language-server'],
-        \ 'typescript': ['tsserver', 'tslint', 'eslint'],
-        \ 'ruby': ['rubocop', 'ruby']
-        \}
-  let g:ale_fixers = {
-        \ '*': ['remove_trailing_lines', 'trim_whitespace'],
-        \ 'javascript': ['eslint', 'prettier'],
-        \ 'typescript': ['prettier'],
-        \ 'typescriptreact': ['prettier'],
-        \ 'jsx': ['eslint']
-        \}
-  nnoremap <leader>lf :ALEFix<CR>
-  nnoremap <leader>lo :lopen<CR>
-  nnoremap <leader>lc :lclose<CR>
+  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'amiralies/coc-flow', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc-solargraph', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc-json', {'do': 'yarn install --frozen-lockfile'}
+  let ruby = "2.4.1"
+  if $RUBY_VERSION != ""
+    let ruby = $RUBY_VERSION
+  end
+  let g:ruby_host_prog = '~/.gem/ruby/' . ruby . '/bin/neovim-ruby-host'
+  let g:coc_global_extensions = ['coc-solargraph']
+
+
+  " Use tab for trigger completion with characters ahead and navigate.
+  " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
+  inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : <SID>check_back_space() ? "\<TAB>" : coc#refresh()
+  inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+  function! s:check_back_space() abort
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~# '\s'
+  endfunction
+
+  " Use <c-space> for trigger completion.
+  inoremap <silent><expr> <c-space> coc#refresh()
+
+  " Use <cr> for confirm completion.
+  " Coc only does snippet and additional edit on confirm.
+  inoremap <expr> <cr> pumvisible() ? "\<C-y>" : ""
+
+  nmap <silent>gd <Plug>(coc-definition)
+  nmap <silent>gy <Plug>(coc-type-definition)
+  nmap <silent>gi <Plug>(coc-implementation)
+  nmap <silent>gr <Plug>(coc-references)
+  nmap <leader>rn <Plug>(coc-rename)
 
   Plug 'junegunn/vim-easy-align'
   " Start interactive EasyAlign in visual mode (e.g. vipga)
