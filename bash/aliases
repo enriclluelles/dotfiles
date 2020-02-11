@@ -6,7 +6,7 @@ alias ..='cd ..'
 
 # ls
 alias ls="ls -F"
-alias l="ls -tlAh | less -X -F"
+alias l="ls -tGlAh --color | less -rXF"
 alias ll="ls -l"
 alias la='ls -A'
 
