@@ -16,7 +16,7 @@ do
 done
 for f in *
 do
-  if [[ -f $f || $f == "bin" || $f == "vim" || $f == "bash" ]]
+  if [[ -f $f || $f == "bin" || $f == "vim" || $f == "bash" || $f == "config" ]]
   then
     FILEN=$HOME/\.$f
     rm -rf $FILEN
