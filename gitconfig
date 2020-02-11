@@ -13,7 +13,7 @@
 	branch = auto
 [core]
   excludesfile = $HOME/.gitignore_global
-  editor = vim
+  editor = nvim
   autocrlf = input
 [apply]
 	whitespace = nowarn
