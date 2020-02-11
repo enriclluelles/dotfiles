@@ -1,10 +1,97 @@
-""
-"" Thanks:
-""   Gary Bernhardt  <destroyallsoftware.com>
-""   Drew Neil  <vimcasts.org>
-""   Tim Pope  <tbaggery.com>
-""   Janus  <github.com/carlhuda/janus>
-""
+" PLUG
+call plug#begin('~/.config/nvim/plugged')
+
+  Plug 'dense-analysis/ale'
+  let g:ale_sign_error = 'E'
+  let g:ale_sign_warning = '!'
+  let g:airline#extensions#ale#enabled = 1 " Integrate with vim-airline
+  let g:ale_lint_on_text_changed = 'never' " Do not run when text changes
+  let g:ale_sign_column_always = 1         " Always show the sign column
+  let g:ale_linter_aliases = {
+        \ 'typescriptreact': 'typescript',
+        \ 'javascriptreact': 'javascript'
+        \}
+  let g:ale_linters = {
+        \ 'javascript': ['eslint', 'flow-language-server'],
+        \ 'typescript': ['tsserver', 'tslint', 'eslint'],
+        \ 'ruby': ['rubocop', 'ruby']
+        \}
+  let g:ale_fixers = {
+        \ '*': ['remove_trailing_lines', 'trim_whitespace'],
+        \ 'javascript': ['eslint', 'prettier'],
+        \ 'typescript': ['prettier'],
+        \ 'typescriptreact': ['prettier'],
+        \ 'jsx': ['eslint']
+        \}
+  nnoremap <leader>lf :ALEFix<CR>
+  nnoremap <leader>lo :lopen<CR>
+  nnoremap <leader>lc :lclose<CR>
+
+  Plug 'junegunn/vim-easy-align'
+  " Start interactive EasyAlign in visual mode (e.g. vipga)
+  xmap ga <Plug>(EasyAlign)
+
+  " Start interactive EasyAlign for a motion/text object (e.g. gaip)
+  nmap ga <Plug>(EasyAlign)
+
+
+  " On-demand loading
+  Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
+  Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
+
+  " Using a tagged release; wildcard allowed (requires git 1.9.2 or above)
+  Plug 'fatih/vim-go', { 'tag': '*' }
+
+  " Plugin options
+  Plug 'nsf/gocode'
+
+  " Fuzzy finding utils
+  Plug 'junegunn/fzf', { 'do': './install --bin' }
+  Plug 'junegunn/fzf.vim'
+
+  let g:fzf_command_prefix = 'FZF'
+  let $FZF_DEFAULT_COMMAND = 'rg --files'
+  nnoremap <leader><leader>f :FZFFiles<cr>
+  nnoremap <leader><leader>b :FZFBuffers<cr>
+  nnoremap <leader><leader>g :FZFAg<space>
+  nnoremap <leader><leader>v :FZFAg <c-r><c-w><cr>
+
+  " Undo in tree mode
+  Plug 'sjl/gundo.vim'
+
+  " Git tools
+  Plug 'tpope/vim-fugitive'
+  " Helpers to operate with files
+  Plug 'tpope/vim-eunuch'
+  " Change word surroundings
+  Plug 'tpope/vim-surround'
+  " Add endings to common structures
+  Plug 'tpope/vim-endwise'
+  " Github theme
+  Plug 'albertorestifo/github.vim'
+  " Fancier but lean statusbar
+  Plug 'vim-airline/vim-airline'
+  " Test files
+  Plug 'janko/vim-test'
+
+
+call plug#end()
+
+" Set up :PlugLock and :PlugRestore
+command! -nargs=0 -bar -bang PlugLock call s:lock()
+command! -nargs=0 -bar -bang PlugRestore call s:restore()
+
+let g:pluglock_config_path = "/.config/nvim/"
+let g:pluglock_filename = $HOME . g:pluglock_config_path . "pluglock.vim"
+
+function! s:lock()
+  execute "PlugSnapshot " . g:pluglock_filename
+endfunction
+
+function! s:restore()
+  execute "source ". g:pluglock_filename
+endfunction
+" END PLUG
 
 set nocompatible
 syntax enable
@@ -12,7 +99,7 @@ set encoding=utf-8
 
 filetype plugin indent on
 
-call plug_settings#load()
+"a
 
 set background=light
 
@@ -114,23 +201,6 @@ let g:rbpt_loadcmd_toggle = 1
 
 nnoremap <Leader>t :Files<CR>
 
-" " remap ctrlp to leader t
-" let g:ctrlp_map = '<leader>t'
-" let g:ctrlp_working_path_mode = 0
-" let g:ctrlp_clear_cache_on_exit = 0
-" let g:ctrlp_custom_ignore = 'node_modules\|^\.git\|tmp'
-" " let g:ctrlp_user_command = {
-" "       \ 'types': {
-" "       \ 1: ['.git', 'cd %s && git ls-files'],
-" "       \ 2: ['.hg', 'hg --cwd %s locate -I .'],
-" "       \ },
-" "       \ 'fallback': 'find %s -type f',
-" "       \ 'ignore': 0
-" "       \ }
-"
-
-"set fzf default command
-let $FZF_DEFAULT_COMMAND = 'find . \( -path ./node_modules -o -path ./.git \) -prune -o -print'
 
 "snipmate
 let g:snipMate = {}
