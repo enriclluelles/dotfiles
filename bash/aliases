@@ -6,7 +6,7 @@ alias ..='cd ..'
 
 # ls
 alias ls="ls -F"
-alias l="ls -lAh"
+alias l="ls -tlAh | less -X -F"
 alias ll="ls -l"
 alias la='ls -A'
 
@@ -86,6 +86,6 @@ alias findcwd='pgrep -f | xargs lsof -p  | grep cwd'
 alias docker_killall='docker rm -f $(docker ps -a -q)'
 
 # Use kubectl provided with docker for desktop if not present
-if [[ -x "$(command -v kubectl)" ]]; then
+if ! [ -x "$(command -v kubectl)" ]; then
   alias kubectl=kubectl.docker
 fi
