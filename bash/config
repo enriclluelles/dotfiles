@@ -59,10 +59,10 @@ if [ -z "$JAVA_HOME" ] && [ -d $jdkr_dir ]; then
 fi
 
 
-CHRUBY_PATH=/usr/local/share/chruby/chruby.sh
-if [ -f $CHRUBY_PATH ]; then
-  source $CHRUBY_PATH
-  chruby 2.4.1
+CHRUBY_PATH=/usr/local/share/chruby
+if [ -d $CHRUBY_PATH ]; then
+  source $CHRUBY_PATH/chruby.sh
+  source $CHRUBY_PATH/auto.sh
 fi
 
 #vi mode by default
