@@ -1,0 +1,9 @@
+{
+  "suggest": {
+    "autoTrigger": "trigger",
+    "triggerAfterInsertEnter": true
+  },
+  "javascript": {
+    "validate.enable": false //Don't want tserver messing up with flow
+  }
+}
