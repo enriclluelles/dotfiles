@@ -62,6 +62,7 @@ fi
 CHRUBY_PATH=/usr/local/share/chruby
 if [ -d $CHRUBY_PATH ]; then
   source $CHRUBY_PATH/chruby.sh
+  chruby 2.4.1
   source $CHRUBY_PATH/auto.sh
 fi
 
