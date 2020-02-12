@@ -2,6 +2,7 @@
 call plug#begin('~/.config/nvim/plugged')
 
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc-eslint', {'do': 'yarn install --frozen-lockfile'}
   Plug 'amiralies/coc-flow', {'do': 'yarn install --frozen-lockfile'}
   Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
   Plug 'neoclide/coc-solargraph', {'do': 'yarn install --frozen-lockfile'}
@@ -11,8 +12,6 @@ call plug#begin('~/.config/nvim/plugged')
     let ruby = $RUBY_VERSION
   end
   let g:ruby_host_prog = '~/.gem/ruby/' . ruby . '/bin/neovim-ruby-host'
-  let g:coc_global_extensions = ['coc-solargraph']
-
 
   " Use tab for trigger completion with characters ahead and navigate.
   " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
