@@ -5,13 +5,5 @@
   },
   "javascript": {
     "validate.enable": false //Don't want tserver messing up with flow
-  },
-  "tsserver": {
-    "enable": false
-  },
-  "flow": {
-    "enable": true,
-    "stopFlowOnExit": false,
-    "useNPMPackagedFlow": true
   }
 }

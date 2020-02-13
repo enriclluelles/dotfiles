@@ -1,17 +1,17 @@
 " PLUG
+" Each plugin settings are defined after the Plug
 call plug#begin('~/.config/nvim/plugged')
 
-  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'neoclide/coc-eslint', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'amiralies/coc-flow', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'neoclide/coc-solargraph', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'neoclide/coc-json', {'do': 'yarn install --frozen-lockfile'}
+  " {{{{{{{{{{  COC
+  Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': 'yarn install --frozen-lockfile'}
+  " Make coc-ruby play nice with chruby
   let ruby = "2.4.1"
   if $RUBY_VERSION != ""
     let ruby = $RUBY_VERSION
   end
   let g:ruby_host_prog = '~/.gem/ruby/' . ruby . '/bin/neovim-ruby-host'
+  " Autoinstall extensions
+  let g:coc_global_extensions = ['coc-solargraph', 'coc-flow', 'coc-tsserver', 'coc-eslint', 'coc-json']
 
   " Use tab for trigger completion with characters ahead and navigate.
   " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
@@ -35,6 +35,13 @@ call plug#begin('~/.config/nvim/plugged')
   nmap <silent>gi <Plug>(coc-implementation)
   nmap <silent>gr <Plug>(coc-references)
   nmap <leader>rn <Plug>(coc-rename)
+  " }}}}}}}}}} COC
+
+  " {{{{{{{{{{ Language support
+  Plug 'pangloss/vim-javascript'
+  Plug 'MaxMEllon/vim-jsx-pretty'
+  " }}}}}}}}}} Language support
+
 
   Plug 'junegunn/vim-easy-align'
   " Start interactive EasyAlign in visual mode (e.g. vipga)
@@ -43,7 +50,6 @@ call plug#begin('~/.config/nvim/plugged')
   " Start interactive EasyAlign for a motion/text object (e.g. gaip)
   nmap ga <Plug>(EasyAlign)
 
-
   " On-demand loading
   Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
   Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
@@ -51,10 +57,9 @@ call plug#begin('~/.config/nvim/plugged')
   " Using a tagged release; wildcard allowed (requires git 1.9.2 or above)
   Plug 'fatih/vim-go', { 'tag': '*' }
 
-  " Plugin options
   Plug 'nsf/gocode'
 
-  " Fuzzy finding utils
+  " {{{{{{{{{{ FZF
   Plug 'junegunn/fzf', { 'do': './install --bin' }
   Plug 'junegunn/fzf.vim'
 
@@ -64,6 +69,7 @@ call plug#begin('~/.config/nvim/plugged')
   nnoremap <leader><leader>b :FZFBuffers<cr>
   nnoremap <leader><leader>g :FZFAg<space>
   nnoremap <leader><leader>v :FZFAg <c-r><c-w><cr>
+  " }}}}}}}}}} FZF
 
   " Undo in tree mode
   Plug 'sjl/gundo.vim'
@@ -82,8 +88,6 @@ call plug#begin('~/.config/nvim/plugged')
   Plug 'vim-airline/vim-airline'
   " Test files
   Plug 'janko/vim-test'
-
-
 call plug#end()
 
 " Set up :PlugLock and :PlugRestore
