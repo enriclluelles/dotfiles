@@ -2,9 +2,6 @@
 pushd `dirname "${BASH_SOURCE[0]}"` > /dev/null
 CURRENT_DIR=`pwd`
 git submodule update --init
-pushd vim > /dev/null
-git submodule update --init
-popd > /dev/null
 
 PREF_DIR=$HOME/Library/Preferences
 for f in vimrc gvimrc
@@ -16,7 +13,7 @@ do
 done
 for f in *
 do
-  if [[ -f $f || $f == "bin" || $f == "vim" || $f == "bash" || $f == "config" ]]
+  if [[ -f $f || $f == "bin" || $f == "tmux" || $f == "bash" || $f == "config" ]]
   then
     FILEN=$HOME/\.$f
     rm -rf $FILEN
