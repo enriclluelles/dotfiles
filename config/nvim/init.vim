@@ -42,6 +42,7 @@ call plug#begin('~/.config/nvim/plugged')
   Plug 'MaxMEllon/vim-jsx-pretty'
   " }}}}}}}}}} Language support
 
+  Plug 'editorconfig/editorconfig-vim'
 
   Plug 'junegunn/vim-easy-align'
   " Start interactive EasyAlign in visual mode (e.g. vipga)
