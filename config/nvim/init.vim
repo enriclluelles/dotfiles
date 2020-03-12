@@ -111,8 +111,6 @@ set nocompatible
 syntax enable
 set encoding=utf-8
 
-set shellcmdflag=-ic
-
 filetype plugin indent on
 
 "a
