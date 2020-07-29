@@ -17,8 +17,6 @@ export PGHOST=/tmp
 export GOPATH=$HOME/code/gocode
 export GO15VENDOREXPERIMENT=1
 
-eval "$(docker-machine env dev 2> /dev/null)"
-
 #set window title with the current dir, works on iTerm2
 export PROMPT_COMMAND='echo -ne "\\033]0;${PWD/#$HOME/~}\\007"'
 
@@ -45,32 +43,29 @@ export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 
 
 # Use the latest Oracle JDK if present and JAVA_HOME is not set
-JDK_DIR="/Library/Java/JavaVirtualMachines"
-if [ -z "$JAVA_HOME" ] && [ -d $jdkr_dir ]; then
-  CURRENT_JDK="$jdk_dir/CurrentJDK"
-  if [ -d $CURRENT_JDK ]; then
-    export JAVA_HOME=$CURRENT_JDK/Contents/Home
-  else
-    CURRENT_JDK=$JDK_DIR/$(ls $JDK_DIR | sort | tail -n 1)
-    if [ -d $CURRENT_JDK ]; then
-      export JAVA_HOME=$CURRENT_JDK/Contents/Home
-    fi
-  fi
-fi
+#JDK_DIR="/Library/Java/JavaVirtualMachines"
+#if [ -z "$JAVA_HOME" ] && [ -d $jdkr_dir ]; then
+#  CURRENT_JDK="$jdk_dir/CurrentJDK"
+#  if [ -d $CURRENT_JDK ]; then
+#    export JAVA_HOME=$CURRENT_JDK/Contents/Home
+#  else
+#    CURRENT_JDK=$JDK_DIR/$(ls $JDK_DIR | sort | tail -n 1)
+#    if [ -d $CURRENT_JDK ]; then
+#      export JAVA_HOME=$CURRENT_JDK/Contents/Home
+#    fi
+#  fi
+#fi
 
 
 CHRUBY_PATH=/usr/local/share/chruby
 if [ -d $CHRUBY_PATH ]; then
   source $CHRUBY_PATH/chruby.sh
-  chruby 2.4.1
+  chruby 2.6.5
   source $CHRUBY_PATH/auto.sh
 fi
 
 #vi mode by default
 set -o vi
-
-#disable xon/xoff to use ctrl-s in reverse-i-search
-stty -ixon
 
 GPG_TTY=$(tty)
 export GPG_TTY
