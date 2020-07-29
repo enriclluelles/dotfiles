@@ -69,8 +69,8 @@ call plug#begin('~/.config/nvim/plugged')
   let $FZF_DEFAULT_COMMAND = 'rg --files'
   nnoremap <leader><leader>f :FZFFiles<cr>
   nnoremap <leader><leader>b :FZFBuffers<cr>
-  nnoremap <leader><leader>g :FZFAg<space>
-  nnoremap <leader><leader>v :FZFAg <c-r><c-w><cr>
+  nnoremap <leader><leader>g :FZFRg<space>
+  nnoremap <leader><leader>v :FZFRg<c-r><c-w><cr>
   " }}}}}}}}}} FZF
 
   " Undo in tree mode
