@@ -3,7 +3,8 @@
 call plug#begin('~/.config/nvim/plugged')
 
   " {{{{{{{{{{  COC
-  Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+
   " Make coc-ruby play nice with chruby
   let ruby = "2.4.1"
   if $RUBY_VERSION != ""
