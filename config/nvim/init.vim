@@ -2,17 +2,20 @@
 " Each plugin settings are defined after the Plug
 call plug#begin('~/.config/nvim/plugged')
 
-  " {{{{{{{{{{  COC
-  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
-
   " Make coc-ruby play nice with chruby
-  let ruby = "2.4.1"
+  let ruby = "2.6.5"
   if $RUBY_VERSION != ""
     let ruby = $RUBY_VERSION
   end
   let g:ruby_host_prog = '~/.gem/ruby/' . ruby . '/bin/neovim-ruby-host'
-  " Autoinstall extensions
-  let g:coc_global_extensions = ['coc-solargraph', 'coc-flow', 'coc-tsserver', 'coc-eslint', 'coc-json']
+
+  " {{{{{{{{{{  COC
+  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'amiralies/coc-flow', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc-eslint', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc-json', {'do': 'yarn install --frozen-lockfile'}
+  Plug 'neoclide/coc-solargraph', {'do': 'yarn install --frozen-lockfile'}
 
   " Use tab for trigger completion with characters ahead and navigate.
   " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
