@@ -10,4 +10,5 @@ export PATH="./node_modules/.bin:$PATH"
 export PATH="/usr/local/heroku/bin:$PATH"
 #If coreutils are installed, use them
 export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+export PATH="/opt/go/latest/bin:$PATH"
 export MANPATH="/usr/local/man:/usr/local/mysql/man:/usr/local/git/man:$MANPATH"
