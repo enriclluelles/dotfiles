@@ -11,11 +11,6 @@ call plug#begin('~/.config/nvim/plugged')
 
   " {{{{{{{{{{  COC
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'amiralies/coc-flow', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'neoclide/coc-eslint', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'neoclide/coc-json', {'do': 'yarn install --frozen-lockfile'}
-  Plug 'neoclide/coc-solargraph', {'do': 'yarn install --frozen-lockfile'}
 
   " Use tab for trigger completion with characters ahead and navigate.
   " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
