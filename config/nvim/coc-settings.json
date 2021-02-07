@@ -3,7 +3,15 @@
     "autoTrigger": "trigger",
     "triggerAfterInsertEnter": true
   },
-  "javascript": {
-    "validate.enable": false //Don't want tserver messing up with flow
+  "languageserver": {
+    "flow": {
+      "command": "./node_modules/flow-bin/flow-linux64-v0.114.0/flow",
+      "args": ["lsp"],
+      "filetypes": ["javascript", "javascriptreact"],
+      "trace.server": "verbose",
+      "requireRootPattern": true,
+      "rootPatterns": [".flowconfig"],
+      "settings": {}
+    }
   }
 }
