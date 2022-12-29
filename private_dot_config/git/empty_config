@@ -1,0 +1,52 @@
+[user]
+	name = Enric Lluelles
+	email = git@lluell.es
+[alias]
+	co = checkout
+  subup = submodule update --init
+  pushnew = "!git push -u origin $(git rev-parse --abbrev-ref HEAD)"
+  msg = commit --allow-empty -m
+  br = for-each-ref --sort=committerdate refs/heads/ --format='%(committerdate:short) %(refname:short)' #https://twitter.com/pheeelicks/status/603548193494855680
+[color]
+	diff = auto
+	status = auto
+	branch = auto
+[core]
+  excludesfile = $HOME/.gitignore_global
+  editor = nvim
+  autocrlf = input
+[apply]
+	whitespace = nowarn
+[pull]
+	default = tracking
+[push]
+	default = tracking
+[github]
+  user = enriclluelles
+[branch]
+	autosetuprebase = always
+[merge]
+  tool = custom
+[mergetool "custom"]
+  cmd=$EDITOR -d $LOCAL $MERGED $REMOTE
+  keepbackup=false
+  keeptemporaries=false
+  trustexitcode=false
+[pretty "shortd"]
+  format = "%Cred%h%Creset - %C(green) %an %C(reset) - %C(yellow)%d%Creset %s %Cgreen(%cr) %Creset"
+[tig]
+  line-graphics = "utf-8"
+  main-view = id:yes date:relative author:yes commit-title:yes,graph=yes,refs=yes,overflow=yes
+  vertical-split = no
+[help]
+	autocorrect = 1
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
+[commit]
+  #gpgsign = true
+[url "git@github.com:"]
+	insteadOf = https://github.com/
