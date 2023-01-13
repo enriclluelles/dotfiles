@@ -1,14 +1,14 @@
 #!/bin/bash
 
-~/bin/chezmoi init
+chezmoi init
 
 pushd ~/.local/share/chezmoi
-  git remote add origin $SUPERVISOR_DOTFILE_REPO
+  git remote add origin git@github.com:enriclluelles/factorial-dotfiles.git
   git branch -M main
   git pull origin main
 popd
 
-~/bin/chezmoi apply
+chezmoi apply
 
 source ~/.bashrc
 
