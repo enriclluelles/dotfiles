@@ -14,6 +14,7 @@ vim.o.background = "dark"
 vim.g.syntax = true
 
 -- SETTINGS
+opt.clipboard = "unnamedplus"
 opt.backup = false -- creates a backup file
 opt.cmdheight = 1 -- more space in the neovim command line for displaying messages
 opt.colorcolumn = "99999" -- fix indentline for now
