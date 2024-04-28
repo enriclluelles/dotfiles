@@ -15,7 +15,7 @@
   branch = auto
 [core]
   excludesfile = $HOME/.gitignore_global
-  editor = nvim
+  editor = lvim
   autocrlf = input
 [apply]
   whitespace = nowarn
