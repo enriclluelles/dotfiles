@@ -34,6 +34,13 @@ lvim.lsp.buffer_mappings.normal_mode["gd"] = {
   "Goto definition"
 }
 
+lvim.lsp.buffer_mappings.normal_mode["gD"] = {
+  function()
+    vim.lsp.buf.definition()
+  end,
+  "Goto definition"
+}
+
 lvim.lsp.buffer_mappings.normal_mode["gr"] = {
   function()
     require("telescope.builtin").lsp_references()
@@ -56,6 +63,7 @@ lvim.builtin.which_key.mappings["g"]["f"] = {
 
 lvim.builtin.telescope.defaults.file_ignore_patterns = {
   "vendor/cache",
+  "tmp"
 }
 
 lvim.builtin.telescope.pickers.find_files.find_command = { "rg", "--files", "--color", "never", "--type", "all" }
@@ -73,7 +81,8 @@ lvim.builtin.project.active = false
 lvim.builtin.nvimtree.setup.renderer.icons.show.git = false
 
 -- Automatically install missing parsers when entering buffer
-lvim.builtin.treesitter.auto_install = false
+lvim.builtin.treesitter.auto_install = true
+
 
 -- lvim.builtin.treesitter.ignore_install = { "haskell" }
 
@@ -155,7 +164,8 @@ lvim.plugins = {
   {
     "enriclluelles/telescope.nvim",
     branch = "lsp_multi_client",
-  }
+  },
+  { "nushell/tree-sitter-nu" },
 }
 
 -- -- Autocommands (`:help autocmd`) <https://neovim.io/doc/user/autocmd.html>
