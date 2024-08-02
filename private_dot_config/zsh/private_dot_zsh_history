@@ -1,6 +1,0 @@
-cd ~/code/dotfiles
-tig
-gp
-git push
-git pull --rebase
-exit
