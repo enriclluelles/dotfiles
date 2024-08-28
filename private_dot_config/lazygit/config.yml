@@ -1,0 +1,20 @@
+promptToReturnFromSubprocess: false
+disableStartupPopups: true
+gui:
+  scrollHeight: 10
+  sidePanelWidth : 0.20
+  expandFocusedSidePanel: true
+  expandedSidePanelWeight: 4
+
+  showCommandLog: false
+  border: single
+  windowSize: full
+git:
+  paging:
+    colorArg: always
+    pager: delta --dark --paging=never
+customCommands:
+  - key: 'S'
+    context: 'commits'
+    subprocess: true
+    command: "git show {{.SelectedLocalCommit.Hash}} | delta --paging always"
