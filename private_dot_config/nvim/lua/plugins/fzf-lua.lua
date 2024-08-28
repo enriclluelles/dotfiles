@@ -1,7 +1,7 @@
 local overrides = {
+  "borderless",
   files = {
     cwd_prompt = true,
-    git_icons = false,
     cmd = [[rg --type all --files --color=never --hidden --glob '!tmp' --glob '!.git' ]]
       .. [[ --glob '!node_modules' --glob '!vendor' ]]
       .. [[--glob '!*.min.*' --glob '!*.map' --glob '!*.log' --glob '!*.cache' --glob ]]

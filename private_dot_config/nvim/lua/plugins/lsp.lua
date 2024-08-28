@@ -4,6 +4,7 @@ return {
     opts = {
       autoformat = false,
       servers = {
+        rust_analyzer = { enabled = true },
         ruby_lsp = { enabled = true },
         sorbet = { enabled = true },
         rubocop = { enabled = false },
