@@ -15,7 +15,7 @@
   branch = auto
 [core]
   excludesfile = $HOME/.gitignore_global
-  editor = lvim
+  editor = nvim
   autocrlf = input
   pager = delta
 [interactive]
