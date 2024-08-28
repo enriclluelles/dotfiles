@@ -1,1 +1,1 @@
-export EDITOR=lvim
+export EDITOR=nvim
