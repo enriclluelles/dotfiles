@@ -32,7 +32,6 @@ cask "visual-studio-code"
 cask "vlc"
 cask "whatsapp"
 cask "zed"
-cask "zoom"
 
 brew "aom"
 brew "argocd"
