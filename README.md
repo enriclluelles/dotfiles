@@ -30,17 +30,28 @@ Before you begin, ensure you have the following installed on your macOS system:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-### 2. Install chezmoi
+### 2. Clone this repository
 
 ```bash
-brew install chezmoi
+# Clone the repository
+git clone https://github.com/YOURUSERNAME/dotfiles.git ~/code/dotfiles
+
+# Navigate to the repository
+cd ~/code/dotfiles
 ```
 
-### 3. Initialize with this dotfiles repository
+### 3. Install Dependencies with Brew Bundle
 
 ```bash
-# Initialize chezmoi with this repository
-chezmoi init https://github.com/YOURUSERNAME/dotfiles.git
+# Install all dependencies (apps, tools, including chezmoi)
+brew bundle --file=private_dot_config/brewfile/Brewfile
+```
+
+### 4. Initialize and Apply with Chezmoi
+
+```bash
+# Initialize chezmoi with the current repository
+chezmoi init ~/code/dotfiles
 
 # Preview what changes chezmoi would make to your system
 chezmoi diff
