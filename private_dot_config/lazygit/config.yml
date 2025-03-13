@@ -5,10 +5,9 @@ gui:
   sidePanelWidth : 0.20
   expandFocusedSidePanel: true
   expandedSidePanelWeight: 4
-
   showCommandLog: false
   border: single
-  windowSize: full
+  portraitMode: never
 git:
   paging:
     colorArg: always
