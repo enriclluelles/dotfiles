@@ -1,0 +1,437 @@
+exit
+mkdir ~/.cache/starship<\n>starship init nu | save -f ~/.cache/starship/init.nu
+lvim $nu.config-path
+exit
+cd ~/code/factorial/
+lvim $nu.config-path
+exit
+ls -lah
+ls
+rm ~
+rm ./~
+ls
+cd ~
+ls
+open .
+start .
+ls
+rm tmux-client-41258.log
+rm tmux.conf
+rm dolphie_hosts
+lvim $nu.config-path
+exit
+ls
+exit
+lvim $nu.env-path
+chezmoi add ~/.config/nushell/config.nu ~/.config/nushell/env.nu
+lvim $nu.config-path
+exit
+lvim $nu.config-path
+open .
+exit
+open .
+nu-open .
+nu-open https://google.com
+nu-start https://google.com
+start https://google.com
+echo $env.PATH
+$env.PATH | split row (char esep) 
+$env.PATH 
+$env.PATH | append /usr/bin
+$env.PATH | append /usr/bin | append /usr/bin
+lvim ~/code/factorial-labs/netlify.toml
+cd ~/code/factorial/backend/
+tig
+git ls-files
+git ls-files | bat
+git ls-files | bat | describe
+git ls-files | describe 
+git ls-files | ^echo
+git ls-files | ^echo 
+git ls-files | ^echo $it
+git ls-files | each{|l| ^echo $l}
+git ls-files | each{|l| echo $l}
+git ls-files | each { |l| echo $l }
+git ls-files | each { |l| echo $l } | first 10
+git ls-files | each { |l| echo $l } | first 1
+git ls-files | each { |l| echo $l }
+git ls-files | first 1
+git ls-files | each { |l| echo $l }
+git ls-files | each { |l| echo $l } | first
+git ls-files | each { |l| echo $l } | first 100
+git ls-files | each { |l| echo $l } | first 100 | grep dels
+direnv allow
+cd ~/code/factorial/
+cd backend
+direnv allow
+gp
+git push
+gd
+gss
+ls
+cd
+ls
+git ls-files | str
+git ls-files | str join
+cd ~/code/factorial/
+git ls-files | str join
+git ls-files | str join | describe
+git ls-files | str
+git ls-files | str join | first 10
+git ls-files | each { |l| echo $l } | first 100
+git ls-files | str join | first 100
+git ls-files | first 100
+git ls-files | into string
+git ls-files | into string |describe
+ls
+lvim $nu.env-path
+lvim $nu.config-path
+cd ~/.cache
+ls
+cd starship/
+ls
+cat init.nu
+patch exists "~/.cache/starship/init.nu"
+path exists "~/.cache/starship/init.nu"
+"~/.cache/stathip/init.nu" | path exists
+"~/.cache/starship/init.nu" | path exists
+let path = "~/.cache/starship"<\n>let file = "init.nu"<\n>jjj
+let path = "~/.cache/starship"<\n>let file = "init.nu"<\n>path join $path $file
+"~/.cache/starship/init.nu" | path exists
+let $file = "init.nu"
+let path = "~/.cache/starship"<\n>let file = "init.nu"
+let path = "~/.cache/starship"<\n>let file = "init.nu" $path | path join $file
+let path = "~/.cache/starship"<\n>let file = "init.nu"$path | path join $file
+let path = "~/.cache/starship"<\n>let file = "init.nu"$path | path join e
+let path = "~/.cache/starship"<\n>let file = "init.nu"
+$path | join $file
+$path | path join $file
+cd
+which starship
+if (which starship) { print "mec"}
+if (which starsip) { print "mec"}
+if (which starsip | size > 0) { print "mec"}
+if ((which starsip | size) > 0) { print "mec"}
+if ((which starsip | length) > 0) { print "mec"}
+if ((which starship | length) > 0) { print "mec"}
+exit
+let path = "~/.cache/starship"<\n>let file = "init.nu"<\n>path join $path $file
+let path = "~/.cache/starship"<\n>let file = "init.nu"<\n>$path | path join | $file | path exists
+exit
+rm init.nu
+exit
+ls
+if ( not ($path | path join | $file | path exists) ) {<\n>  if (which starship | length) > 0 {<\n>    exec starship init nu | save -f ($path | path join $file)<\n>  }<\n>}<\n>
+starship init nu
+exit
+mkdir
+cat ~/.cache/starship/init.nu
+rm ~/.cache/starship/init.nu
+rm ~/.cache/starship/init.nu && nu
+rm ~/.cache/starship/init.nu; nu
+ls ~/.cache/starship/
+exit
+nu
+exit
+nu
+exit
+rm ~/.cache/starship/init.nu; nu
+exit
+rm ~/.cache/starship/init.nu; nu
+exit
+nu
+ls
+open all_hands_infra_performance.txt
+^open all_hands_infra_performance.txt
+lvim ~/.config/nushell/config.nu
+chezmoi add ~/.config/nushell/config.nu ~/.config/nushell/env.nu
+cd ~/code/factorial/backend/
+ls
+ls | sort size
+ls | sort by size
+tig
+ls
+ls | sort-by size
+ls | sort-by size | first 10
+ls | sort-by size | first 10 | bat
+ls | sort-by size | first 10 | lvim
+ls | sort-by size | first 10 | select name
+ls | sort-by size | first 10 | select name | first
+ls | sort-by size | first 10 | select name | first | lvim
+ls | sort-by size | first 10 | get name
+ls | sort-by size | first 10 | get name | first
+ls | sort-by size | first 10 | get name | lvim
+ls | sort-by size | first 10 | get name | first 10
+ls | sort-by size | first 10 | get name | describe
+ls | sort-by size | first 10 | get name | describe | join | lvim
+ls | sort-by size | first 10 | get name | describe | str join
+ls | sort-by size | first 10 | get name | str join
+ls | sort-by size | first 10 | get name | str join "\n"
+ls | sort-by size | first 10 | get name | str join "\n" | lvim
+ls | sort-by size | first 10 | get name | into string
+ls | sort-by size | first 10 | get name | into string | lvim
+ls | sort-by size | first 10 | get name | to text
+ls | sort-by size | first 10 | select name | to text
+ls | sort-by size | first 10 | to text
+ps aux
+ps 
+htop
+htop | grep watchm
+ps | grep watchman
+htop
+lvim /opt/homebrew/var/run/watchman/enric-state/log
+pstree
+pstree | bat
+pkill -f watchman
+pstree | bat
+watchman -h
+which watchman
+lvim ~/.config/brewfile/Brewfile
+cd ~/code/
+lvim .
+cd factorial/
+lvim .
+aws ssm start-session --target (aws ec2 describe-instances --filters 'Name=tag:Name,Values=production-blue/k8s-console' 'Name=instance-state-name,Values=running' | grep 'InstanceId' | awk -F '"' '{ print $4 }' | tail -n 1)
+export $AWS_PROFILE=production
+$env.AWS_PROFILE=production
+$env.AWS_PROFILE = production
+aws sso login
+$env.AWS_PROFILE = factorial_production
+aws ssm start-session --target (aws ec2 describe-instances --filters 'Name=tag:Name,Values=production-blue/k8s-console' 'Name=instance-state-name,Values=running' | grep 'InstanceId' | awk -F '"' '{ print $4 }' | tail -n 1)
+aws sso login
+exit
+exit
+chezmoi cd
+aws ssm start-session --target (aws ec2 describe-instances --filters 'Name=tag:Name,Values=production-blue/k8s-console' 'Name=instance-state-name,Values=running' | grep 'InstanceId' | awk -F '"' '{ print $4 }' | tail -n 1)
+lvim ~/.config/nushell/
+exit
+nu
+exit
+lvim ~/.config/nushell/
+exit
+exut
+exit
+lvim ~/.config/nushell/
+let path = "~/.cache/starship"<\n>let file = "init.nu"<\n>if not ( $path | path exists) { mkdir $path }<\n>if ( not ($path | path join | $file | path exists) ) {<\n>  if (which starship | length) > 0 {<\n>    starship init nu | save -f ($path | path join $file)<\n>    echo "use ~/.cache/starship/init.nu\n" | save -f "~/.config/nushell/config.nu" --append<\n>  }<\n>}<\n>
+not ($path | path join | $file | path exists)
+$path | path join $file
+$path | path join $file | path exists
+not ( $path | path join $file | path exists )
+if not ( $path | path join $file | path exists )<\n>{<\n>print "mec"<\n>}
+$path | path join $file | path exists
+if not ( $path | path join $file | path exists )<\n>{<\n>print "mec"<\n>}
+if ( not ( $path | path join $file | path exists ) )<\n>{<\n>print "mec"<\n>}
+if ( not ( $path | path join $file | path exists ) ) {<\n>print "mec"<\n>}
+exit
+let path = "~/.cache/starship"<\n>let file = "init.nu"<\n>let full_path = $path | path join | $file<\n>
+echo $full_path
+path join | $file
+$path
+$path | path join $file
+let full_path = ($path | path join | $file)<\n>let cond = not ( $full_path | path exists )<\n>if not ( $path | path exists ) { mkdir $path }<\n>
+let path = "~/.cache/starship"<\n>let file = "init.nu"<\n>let full_path = ($path | path join | $file)<\n>
+$full_path
+exit
+nu
+exit
+nu
+chezmoi add ~/.config/nushell/config.nu ~/.config/nushell/env.nu
+ps
+exit
+chezmoi cd
+ls
+enter
+exit
+enter
+dexit
+cd /tmp
+p
+enter ~
+n
+p
+n
+exit
+ps aux
+ps 
+man ps
+^ps
+ps
+^ps aux
+ls
+ps
+ps | to text | grep mec
+ps | to text | grep watch
+pstree
+pstree | bat
+exit
+k9s --context production-blue
+cd ..
+cd factorial/backend/
+glr
+git pull --rebase
+gd
+git diff
+git checkout backend
+git checkout .
+glr
+git pull --rebase
+lvim .
+gd
+git diff
+git co -b fix-method-visibility
+git commit -av
+git pushnew
+lvim .
+git commit -av
+gp
+git push
+tig
+lvim .
+rg --hidden --files
+rg --hidden --files | wc -l
+find /tmp | wc -l
+find tmp | wc -l
+cd tmp
+find .
+^find .
+^find . | wc -l
+cd ..
+^find log
+ls
+exit
+ls
+^ls
+zsh
+ls
+ps
+ps | sort-by name
+ps | sort-by cpu
+ps | sort-by cpu | reverse | first 5
+ps | sort-by mem | reverse | first 5
+cd ~/code/factorial/backend/
+lvim .
+curl
+export $AWS_PROFILE=production
+$env.AWS_PROFILE = factorial_production
+kubectl get pods -n data-mesh
+kubectl get pods -n data-mesh | split column " "
+kubectl get pods -n data-mesh | split column -r "\s+"
+kubectl get pods -n data-mesh | split column -r " +"
+kubectl get pods -n data-mesh | split column -r " +" | split row "\n"
+kubectl get pods -n data-mesh | split row "\n"
+kubectl get pods -n data-mesh | split row "\n" | split column " +"
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +"
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | select name
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | select NAME
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +"
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers | select NAME
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers | select NAME | first | to text
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers | select NAME | first
+kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers | get NAME | first
+kubectl port-forward (kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers | get NAME | first)
+kubectl port-forward (kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers | get NAME | first) -n data-mesh
+kubectl port-forward -h
+open http://localhost:8083
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh 
+kubectl get pods -n data-mesh | to-table
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | to_table
+lvim ~/.config/nushell/config.nu
+exit
+nu
+kubectl get pods -n data-mesh | to_table
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | to_table
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | to_table
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | to_table
+lvim ~/.config/nushell/config.nu
+nyu
+kubectl get pods -n data-mesh | to_table
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | to_table
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | to_table
+kubectl get pods -n data-mesh | to_table --headers
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | to_table --headers
+kubectl get pods -n data-mesh | to_table --headers | get NAME
+kubectl get pods -n data-mesh | to_table --headers | get NAME | first
+ps
+ps | to_table
+ps | detect columns
+kubectl get pods -n data-mesh | detect columns
+kubectl get pods -n data-mesh | detect columns | get NAME
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | detect columns | get NAME
+kubectl get pods -n data-mesh | detect columns | get NAME | first
+kubectl get pods -n data-mesh | detect columns 
+kubectl get pods -n data-mesh | detect columns | headers
+kubectl get pods -n data-mesh | detect columns | columns
+lvim ~/.config/nushell/config.nu
+exit
+nu
+lvim ~/.config/nushell/config.nu
+ps | detect columns
+ps | first-field tty
+ps | first-field name
+ps | first-field ipd
+ps | first-field pid
+lvim ~/.config/nushell/config.nu
+kubectl get pods --all-namespaces | first-of-field name<\n>
+lvim ~/.config/nushell/config.nu
+kubectl get pods -n data-mesh | detect columns | get NAME
+kubectl get pods -n data-mesh | detect columns | get NAME | first
+kubectl get pods -n data-mesh | grep debezium
+kubectl get pods -n data-mesh | grep debezium | detect columns
+kubectl get pods -n default | grep debezium | detect columns
+kubectl get pods -n default | grep backend | detect columns
+kubectl get pods -n default | grep backend | detect columns -n
+kubectl get pods -n data-mesh | grep debezium | detect columns -n
+kubectl get pods -n data-mesh | grep debezium | detect columns -n | get column0
+kubectl get pods -n data-mesh | grep debezium | detect columns -n | get column0 | first
+kubectl get pods --all-namespaces | grep debezium | detect columns -n | get column0 | first
+kubectl get pods --all-namespaces | detect columns -n 
+kubectl get pods --all-namespaces | detect columns -n | where column1 =~ 'backend'
+kubectl get pods --all-namespaces | detect columns -n | where column1 =~ 'backend' | where not(column1 =~ 'console')
+kubectl get pods --all-namespaces | detect columns -n | where column1 =~ 'backend' | where column1 =~ 'console'
+kubectl get pods --all-namespaces | detect columns -n | where column1 =~ 'backend' | where {|e| $e.column1 =~ 'console'} 
+kubectl get pods --all-namespaces | detect columns -n | where column1 =~ 'backend' | where {|e| $e.column1 !~ 'console'} 
+http get http://localhost:8083
+http get http://localhost:8083/connectors
+http get http://localhost:8083/connectors/connector-debezium-pro
+http get http://localhost:8083/connectors/connector-debezium-pro/config
+http get http://localhost:8083/connectors/connector-debezium-pro/config | get table.exclude.list
+http get http://localhost:8083/connectors/connector-debezium-pro/config | get 'table.exclude.list'
+http get http://localhost:8083/connectors/connector-debezium-pro/config | get 'table.exclude.list' | pbcopy
+http get http://localhost:8083/connectors/connector-debezium-pro/config
+kubectl port-forward (kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers | get NAME | first) -n data-mesh 8083:8083
+gd
+git diff
+gss
+git status --short
+git add k8s -p
+git commit -v
+git diff
+git commit -av
+http get http://localhost:8083/connectors/connector-debezium-pro/config
+http get http://localhost:8083/connectors/connector-debezium-pro/config | detect columns
+http get http://localhost:8083/connectors/connector-debezium-pro/config | table
+http get http://localhost:8083/connectors/connector-debezium-pro/config | from json
+http get http://localhost:8083/connectors/connector-debezium-pro/config -r
+http get http://localhost:8083/connectors/connector-debezium-pro/config -r | from json
+http get http://localhost:8083/connectors/connector-debezium-pro/config -r | from json | columns
+http get http://localhost:8083/connectors/connector-debezium-pro/config -r | from json | where connector.class =~ 'mec'
+http get http://localhost:8083/connectors/connector-debezium-pro/config -r | from json | detect columns
+http get http://localhost:8083/connectors/connector-debezium-pro/config -r | detect columns
+http get http://localhost:8083/connectors/connector-debezium-pro/config
+http get http://localhost:8083/connectors/connector-debezium-pro/config | columns
+http get http://localhost:8083/connectors/connector-debezium-pro/config | get name
+http get http://localhost:8083/connectors/connector-debezium-pro/config | get database
+http get http://localhost:8083/connectors/connector-debezium-pro/config | get database.user
+http get http://localhost:8083/connectors/connector-debezium-pro/config | get 'database.user'
+curl http://localhost:8083/connectors/connector-debezium-pro/config > debezium-config.json
+kubectl port-forward (kubectl get pods -n data-mesh | split row "\n" | split column -r " +" | headers | get NAME | first) -n data-mesh 8083:8083
