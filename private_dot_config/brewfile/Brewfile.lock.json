@@ -151,12 +151,6 @@
           "full_name": "whatsapp"
         }
       },
-      "zoom": {
-        "version": "6.2.3.40682",
-        "options": {
-          "full_name": "zoom"
-        }
-      },
       "font-jetbrains-mono-nerd-font": {
         "version": "3.2.1",
         "options": {
