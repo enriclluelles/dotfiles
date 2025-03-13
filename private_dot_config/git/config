@@ -17,7 +17,7 @@
   excludesfile = $HOME/.gitignore_global
   editor = nvim
   autocrlf = input
-  pager = delta
+  #pager = delta
 [interactive]
   diffFilter = delta --color-only
 [apply]
@@ -37,6 +37,8 @@
   keepbackup=false
   keeptemporaries=false
   trustexitcode=false
+[mergetool "deltadir"]
+  cmd = "diff -r $LOCAL $REMOTE"
 [pretty "shortd"]
   format = "%Cred%h%Creset - %C(green) %an %C(reset) - %C(yellow)%d%Creset %s %Cgreen(%cr) %Creset"
 [tig]
@@ -51,3 +53,4 @@
   insteadOf = https://github.com/
 [delta]
   navigate = true
+  side-by-side = true
