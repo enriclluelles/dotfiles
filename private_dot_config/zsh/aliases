@@ -1,3 +1,4 @@
+# git
 alias glr='git pull --rebase'
 alias gl='git pull'
 alias gp='git push'
@@ -12,3 +13,9 @@ alias gs='git status'
 alias gss='git status -sb'
 alias gls='git log --format=shortd'
 alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
+
+#webshare
+alias webshare='python -c "import SimpleHTTPServer;SimpleHTTPServer.test()"'
+
+#docker
+alias docker_killall='docker rm -f $(docker ps -a -q)'
