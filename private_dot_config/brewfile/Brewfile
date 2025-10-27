@@ -4,6 +4,7 @@ tap "homebrew/bundle"
 tap "opencode-ai/tap"
 
 
+cask "claude"
 cask "orion"
 cask "alacritty"
 cask "brave-browser"
@@ -102,3 +103,4 @@ brew "opencode-ai/tap/opencode"
 brew "llm"
 brew "pdftk-java"
 brew "libpq"
+brew "tmuxinator"
