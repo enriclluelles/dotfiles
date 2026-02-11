@@ -20,3 +20,6 @@ alias webshare='python -c "import SimpleHTTPServer;SimpleHTTPServer.test()"'
 #docker
 alias docker_killall='docker rm -f $(docker ps -a -q)'
 
+# claude code
+alias cc='claude --dangerously-skip-permissions'
+
