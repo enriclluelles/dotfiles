@@ -23,6 +23,7 @@ return {
   { import = "lazyvim.plugins.extras.dap.core" },
 
   -- AI
+  { import = "lazyvim.plugins.extras.ai.copilot" },
   { import = "lazyvim.plugins.extras.ai.avante" },
 
   -- Linting
