@@ -1,3 +1,4 @@
+fish_add_path $HOME/.local/share/mise/shims
 fish_add_path /usr/local/bin
 fish_add_path /opt/homebrew/opt/node@16/bin
 fish_add_path /$HOME/go/bin
