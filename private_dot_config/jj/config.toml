@@ -1,0 +1,8 @@
+#:schema https://docs.jj-vcs.dev/latest/config-schema.json
+
+[user]
+name = "Enric Lluelles"
+email = "git@lluell.es"
+
+[revsets]
+log = "@ | ancestors(@, 15)"
