@@ -1,2 +1,10 @@
 README.md
 install.sh
+
+# pi - machine-local / volatile files
+.pi/agent/auth.json
+.pi/agent/sessions
+.pi/agent/sessions/**
+
+# agents - npx-installed skills and lock file
+.agents/.skill-lock.json
