@@ -7,6 +7,20 @@ description: Use when the user asks for information from Datadog — logs, metri
 
 Always use the `pup` command-line tool to query Datadog. Do **not** open the Datadog web UI or call the API directly unless the user explicitly asks for it.
 
+## Site Configuration
+
+Always set the `DD_SITE` environment variable to use the EU Datadog site:
+
+```bash
+export DD_SITE=datadoghq.eu
+```
+
+Prefix every `pup` command with `DD_SITE=datadoghq.eu` if the env var is not already exported in the shell:
+
+```bash
+DD_SITE=datadoghq.eu pup <command> [subcommand] [options]
+```
+
 ## General Usage
 
 ```bash
@@ -94,6 +108,7 @@ pup <command> --help
 
 ## Rules
 
+- **Always** set `DD_SITE=datadoghq.eu` when running `pup` commands.
 - **Always** use `pup` for Datadog queries unless the user explicitly says otherwise.
 - Prefer `--output table` when showing results to the user for readability.
 - Use `--output json` when piping to `jq` or processing programmatically.
