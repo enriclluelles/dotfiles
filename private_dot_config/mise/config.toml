@@ -2,7 +2,8 @@
 idiomatic_version_file_enable_tools = ["ruby"]
 
 [tools]
-go = "1.24.1"
+go = "1.24.1" 
 node = "latest"
 bun = "latest"
 "github:can1357/oh-my-pi" = "latest"
+azure-kubelogin = "0.2.14"
