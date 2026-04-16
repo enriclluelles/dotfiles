@@ -46,6 +46,17 @@ Or to re-add all managed files that have changed:
 chezmoi re-add
 ```
 
+## Attribution
+
+When adding a skill that was installed from an external source (e.g. `npx skills add`, copied from a repo, or adapted from someone else's work), include an `ATTRIBUTION` file in the skill directory with a one-liner crediting the source.
+
+Example:
+```bash
+echo "Source: https://github.com/user/repo" > ~/.agents/skills/my-skill/ATTRIBUTION
+```
+
+This file is **not** referenced in `SKILL.md` so it won't be loaded into LLM context — it's purely for human bookkeeping.
+
 ## Rules
 
 - **Always** run `chezmoi status` after modifying dotfiles or skills to check for untracked changes.
