@@ -23,9 +23,17 @@ return {
   { import = "lazyvim.plugins.extras.dap.core" },
 
   -- AI
-  { import = "lazyvim.plugins.extras.ai.copilot" },
   { import = "lazyvim.plugins.extras.ai.avante" },
 
   -- Linting
   { import = "lazyvim.plugins.extras.linting.eslint" },
+
+  -- Drive avante with the local Claude Code CLI (ACP provider), using the
+  -- Claude Code subscription/auth instead of Copilot or an API key. This must
+  -- come after the avante extra import above so it wins the opts merge; the
+  -- extra otherwise forces provider = "copilot".
+  {
+    "yetone/avante.nvim",
+    opts = { provider = "claude-code" },
+  },
 }
