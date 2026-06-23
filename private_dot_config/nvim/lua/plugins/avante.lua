@@ -1,9 +1,9 @@
 return {
   {
     "yetone/avante.nvim",
+    -- API key is read from the ANTHROPIC_API_KEY environment variable.
     opts = {
       provider = "claude",
-      anthropic_api_key = "<YOUR_API_KEY>", -- Replace with your Claude API key to enable subscription integration
     },
   },
 }

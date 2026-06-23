@@ -22,7 +22,19 @@ return {
           end,
         },
         sorbet = {
-          enabled = true,
+          -- Sorbet exits with "requires a single input directory" on any project
+          -- without a sorbet/config, so only attach where one actually exists.
+          root_dir = function(bufnr, on_dir)
+            local fname = vim.api.nvim_buf_get_name(bufnr)
+            local dir = vim.fn.fnamemodify(fname, ":p:h")
+            while dir ~= "/" do
+              if vim.uv.fs_stat(dir .. "/sorbet/config") then
+                on_dir(dir)
+                return
+              end
+              dir = vim.fn.fnamemodify(dir, ":h")
+            end
+          end,
         },
         clangd = { mason = false },
         rubocop = { enabled = false },
