@@ -1,0 +1,10 @@
+{
+  "enabledPlugins": {
+    "feature-dev@claude-plugins-official": true
+  },
+  "effortLevel": "medium",
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "auto",
+  "includeCoAuthoredBy": false
+}
