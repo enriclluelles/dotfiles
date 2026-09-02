@@ -2,7 +2,6 @@ tap "azure/kubelogin"
 tap "datadog-labs/pack"
 tap "fluxcd/tap"
 tap "hashicorp/tap"
-tap "homebrew/bundle"
 tap "opencode-ai/tap"
 
 brew "aom"
