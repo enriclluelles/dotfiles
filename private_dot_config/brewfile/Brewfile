@@ -96,6 +96,7 @@ brew "yt-dlp"
 brew "zstd"
 
 cask "antigravity"
+cask "antigravity-ide"
 cask "brave-browser"
 cask "calibre"
 cask "claude"
