@@ -1,0 +1,7 @@
+# Ported from the old alacritty.toml.
+
+font-family = "JetBrainsMono Nerd Font"
+font-size = 14
+
+# XDG_CONFIG_HOME is deliberately not set here: ~/.zshenv already exports it,
+# and the value in alacritty.toml pointed at a stale /Users/enric path.
