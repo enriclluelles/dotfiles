@@ -1,0 +1,6 @@
+# tpm is a git repo, not a brew formula: tmux.conf's `run -b` expects it at
+# ~/.tmux/plugins/tpm, so chezmoi clones it there on apply.
+[".tmux/plugins/tpm"]
+    type = "git-repo"
+    url = "https://github.com/tmux-plugins/tpm.git"
+    refreshPeriod = "168h"
