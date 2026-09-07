@@ -1,2 +1,1 @@
 source $ZDOTDIR/aliases
-eval "$(/opt/homebrew/bin/brew shellenv)"

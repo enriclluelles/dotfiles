@@ -11,7 +11,10 @@ set -g extended-keys on
 set -g base-index 1
 setw -g pane-base-index 1
 
-set -g default-command "fish"
+# zsh is installed and made the login shell by this repo's run_once script,
+# but probe anyway: a default-command pointing at a missing binary makes
+# every new pane die on spawn.
+if-shell 'command -v zsh >/dev/null 2>&1' 'set -g default-command "zsh"'
 set -g default-terminal "tmux-256color"
 set -ag terminal-features 'xterm-256color:RGB'
 
@@ -75,15 +78,15 @@ bind-key t choose-tree
 bind-key Space resize-pane -Z
 
 # Reload config file
-bind-key r source-file ~/.tmux.conf \; display-message "~/.tmux.conf reloaded"
+bind-key r source-file ~/.config/tmux/tmux.conf \; display-message "tmux.conf reloaded"
 
 # Setup 'v' to begin selection as in Vim
 bind-key -T copy-mode-vi 'v' send-keys -X begin-selection
-bind-key -T copy-mode-vi 'y' send-keys -X copy-pipe-and-cancel 'pbcopy'
+bind-key -T copy-mode-vi 'y' send-keys -X copy-pipe-and-cancel '{{ if eq .chezmoi.os "darwin" }}pbcopy{{ else }}wl-copy{{ end }}'
 
 # Update default binding of `Enter` to also use copy-pipe
 unbind -T copy-mode-vi Enter
-bind-key -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel "pbcopy"
+bind-key -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel "{{ if eq .chezmoi.os "darwin" }}pbcopy{{ else }}wl-copy{{ end }}"
 
 # Personalization
 # ===============

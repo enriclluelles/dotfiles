@@ -1,0 +1,23 @@
+export ZDOTDIR="$HOME/.config/zsh"
+export EDITOR="nvim"
+export XDG_CONFIG_HOME="$HOME/.config"
+
+# PATH additions. Each line prepends, so the LAST line wins.
+{{- if eq .chezmoi.os "darwin" }}
+# Homebrew, as plain path entries. `brew shellenv` would emit the same PATH
+# but costs a fork+exec on every shell and makes this file useless without
+# brew installed; these are inert on a machine that has no /opt/homebrew.
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
+{{- end }}
+export PATH="$HOME/.local/share/mise/shims:$PATH"
+export PATH="/usr/local/bin:$PATH"
+{{- if eq .chezmoi.os "darwin" }}
+export PATH="/opt/homebrew/opt/node@16/bin:$PATH"
+{{- end }}
+export PATH="$HOME/go/bin:$PATH"
+export PATH="$HOME/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+{{- if eq .chezmoi.os "darwin" }}
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+{{- end }}

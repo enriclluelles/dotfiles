@@ -4,6 +4,7 @@
 # FZF integration
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+{{- if eq .chezmoi.os "darwin" }}
 # Additional fzf key bindings (Homebrew installation)
 if [ -f /opt/homebrew/opt/fzf/shell/key-bindings.zsh ]; then
     source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
@@ -13,6 +14,14 @@ fi
 if [ -f /opt/homebrew/opt/fzf/shell/completion.zsh ]; then
     source /opt/homebrew/opt/fzf/shell/completion.zsh
 fi
+{{- else }}
+# fzf ships its shell integration under /usr/share on Arch/Debian.
+for _fzf_f in /usr/share/fzf/key-bindings.zsh /usr/share/fzf/completion.zsh \
+              /usr/share/doc/fzf/examples/key-bindings.zsh; do
+    [ -f "$_fzf_f" ] && source "$_fzf_f"
+done
+unset _fzf_f
+{{- end }}
 
 # Initialize starship prompt
 eval "$(starship init zsh)"

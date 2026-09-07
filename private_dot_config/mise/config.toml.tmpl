@@ -1,0 +1,22 @@
+[settings]
+idiomatic_version_file_enable_tools = ["ruby"]
+
+[tools]
+go = "1.24.1"
+bun = "latest"
+"github:can1357/oh-my-pi" = "latest"
+azure-kubelogin = "0.2.14"
+python = "3.10.12"
+ruby = "3.3.5"
+antigravity-cli = "latest"
+{{- if eq .chezmoi.os "darwin" }}
+node = "latest"
+{{- else }}
+# Linux (Omarchy): these CLIs are provisioned through mise on this host --
+# `gh` in particular runs from ~/.local/share/mise/shims, so dropping it here
+# would remove it from PATH. node stays pinned to what Omarchy installed.
+node = "26.8.1"
+claude = "latest"
+codex = "latest"
+gh = "latest"
+{{- end }}

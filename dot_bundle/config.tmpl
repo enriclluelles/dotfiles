@@ -1,0 +1,7 @@
+---
+{{- if eq .chezmoi.os "darwin" }}
+BUNDLE_BUILD__MYSQL2: "--with-ldflags=-L/opt/homebrew/opt/zstd/lib --with-cppflags=-I/opt/homebrew/opt/zstd/include"
+{{- else }}
+# Linux: zstd headers/libs live under /usr, already on the default search
+# path, so mysql2 needs no extra build flags.
+{{- end }}

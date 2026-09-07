@@ -8,3 +8,26 @@ install.sh
 
 # agents - npx-installed skills and lock file
 .agents/.skill-lock.json
+
+{{- if ne .chezmoi.os "darwin" }}
+
+# ---- non-macOS (Linux / Omarchy) ----
+
+# macOS-only applications
+.config/karabiner
+.config/brewfile
+
+# Desktop + terminal configs owned by the host OS. On Omarchy these wire in
+# live theming (~/.local/state/omarchy/current/theme/*) and Hyprland-specific
+# fixes; overwriting them breaks `omarchy theme set`.
+#
+# ghostty and tmux are deliberately NOT here: this repo owns them on Linux
+# too. Their templates re-declare the Omarchy bits they would otherwise lose.
+.config/alacritty
+.config/starship.toml
+
+# Arch's fzf package ships fzf_key_bindings.fish in
+# /usr/share/fish/vendor_functions.d/, which fish autoloads. The symlink in
+# this repo points into Homebrew and would shadow it with a dangling link.
+.config/fish/functions/fzf_key_bindings.fish
+{{- end }}
