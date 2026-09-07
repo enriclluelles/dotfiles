@@ -22,3 +22,6 @@ alias docker_killall='docker rm -f $(docker ps -a -q)'
 
 # claude code
 alias cc='claude --dangerously-skip-permissions'
+
+# antigravity cli
+alias gg='antigravity --dangerously-skip-permissions'
