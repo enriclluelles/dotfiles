@@ -12,9 +12,12 @@ set -g base-index 1
 setw -g pane-base-index 1
 
 # zsh is installed and made the login shell by this repo's run_once script,
-# but probe anyway: a default-command pointing at a missing binary makes
-# every new pane die on spawn.
-if-shell 'command -v zsh >/dev/null 2>&1' 'set -g default-command "zsh"'
+# but probe anyway: a default-shell pointing at a missing binary makes
+# every new pane die on spawn. default-shell must be set as well as
+# default-command: tmux otherwise takes it from $SHELL, which is stale
+# (bash) in any desktop session that started before chsh ran.
+run-shell 'zsh_bin=$(command -v zsh) && tmux set -g default-shell "$zsh_bin" \
+  && tmux set -g default-command "$zsh_bin"'
 set -g default-terminal "tmux-256color"
 set -ag terminal-features 'xterm-256color:RGB'
 
