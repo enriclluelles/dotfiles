@@ -1,0 +1,68 @@
+#!/bin/bash
+# Make zsh the login shell on every machine this repo is applied to.
+# The zsh setup here (ZDOTDIR=~/.config/zsh) is the real environment; bash and
+# fish are not guaranteed to be present or configured.
+
+set -euo pipefail
+
+# Run one privileged command. Prefer passwordless sudo, then interactive sudo
+# when there is a terminal to prompt on, then polkit for GUI/agent sessions.
+as_root() {
+  if sudo -n true 2>/dev/null; then
+    sudo "$@"
+  elif [ -t 0 ]; then
+    sudo "$@"
+  elif command -v pkexec >/dev/null 2>&1 && [ -n "${WAYLAND_DISPLAY:-${DISPLAY:-}}" ]; then
+    pkexec "$@"
+  else
+    return 1
+  fi
+}
+
+if ! command -v zsh >/dev/null 2>&1; then
+  echo "shell: zsh not found, installing..."
+{{ if eq .chezmoi.os "darwin" }}
+  # macOS ships zsh at /bin/zsh; only reach for brew if it somehow is not there.
+  if [ ! -x /bin/zsh ] && command -v brew >/dev/null 2>&1; then
+    brew install zsh
+  fi
+{{ else }}
+  if command -v pacman >/dev/null 2>&1; then
+    as_root pacman -S --needed --noconfirm zsh \
+      || { echo "shell: could not install zsh without root; skipping" >&2; exit 0; }
+  elif command -v apt-get >/dev/null 2>&1; then
+    as_root apt-get install -y zsh \
+      || { echo "shell: could not install zsh without root; skipping" >&2; exit 0; }
+  else
+    echo "shell: no known package manager; install zsh manually" >&2
+    exit 0
+  fi
+{{ end }}
+fi
+
+ZSH_BIN="$(command -v zsh || true)"
+if [ -z "$ZSH_BIN" ]; then
+  echo "shell: zsh still unavailable; leaving the login shell alone" >&2
+  exit 0
+fi
+
+# chsh refuses any shell that is not listed in /etc/shells.
+if ! grep -qxF "$ZSH_BIN" /etc/shells 2>/dev/null; then
+  echo "shell: registering $ZSH_BIN in /etc/shells"
+  as_root tee -a /etc/shells >/dev/null <<<"$ZSH_BIN" \
+    || echo "shell: could not update /etc/shells" >&2
+fi
+
+{{ if eq .chezmoi.os "darwin" -}}
+current="$(dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}')"
+{{- else -}}
+current="$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)"
+{{- end }}
+
+if [ "$current" = "$ZSH_BIN" ]; then
+  echo "shell: login shell is already $ZSH_BIN"
+else
+  echo "shell: changing login shell from ${current:-unknown} to $ZSH_BIN"
+  as_root chsh -s "$ZSH_BIN" "$USER" \
+    || echo "shell: could not change login shell; run: chsh -s $ZSH_BIN" >&2
+fi

@@ -1,0 +1,78 @@
+#!/bin/bash
+# Install the Nerd Font that this repo's terminal configs reference.
+# chezmoi runs this once per machine, before the dotfiles are written, so the
+# font exists by the time ghostty/alacritty are pointed at it.
+
+set -euo pipefail
+
+FAMILY="JetBrainsMono Nerd Font"
+NF_VERSION="v3.4.0"
+NF_ARCHIVE="JetBrainsMono.zip"
+
+# NOTE: build the haystack first rather than piping into `grep -q`. Under
+# `set -o pipefail`, grep -q exits on the first match, the producer takes
+# SIGPIPE, and the whole pipeline reports failure -- which reads as "font
+# missing" and reinstalls a font that is already there.
+have_font() {
+  local found=""
+  if command -v fc-list >/dev/null 2>&1; then
+    found="$(fc-list : family 2>/dev/null || true)"
+  else
+    # macOS without fontconfig: look where the cask and manual installs land.
+    found="$(ls ~/Library/Fonts /Library/Fonts 2>/dev/null || true)"
+  fi
+  case "${found,,}" in
+    *"jetbrainsmono nerd font"*|*"jetbrainsmononerdfont"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+if have_font; then
+  echo "font: '$FAMILY' already present, skipping"
+  exit 0
+fi
+
+echo "font: '$FAMILY' not found, installing..."
+
+{{ if eq .chezmoi.os "darwin" -}}
+if command -v brew >/dev/null 2>&1; then
+  brew install --cask font-jetbrains-mono-nerd-font
+  exit 0
+fi
+echo "font: Homebrew not found; falling back to a manual install" >&2
+FONT_DIR="$HOME/Library/Fonts"
+{{- else -}}
+# Arch and friends ship a packaged build; prefer it when we can get root
+# without blocking on a password prompt in a non-interactive apply.
+if command -v pacman >/dev/null 2>&1; then
+  if sudo -n true 2>/dev/null || [ -t 0 ]; then
+    sudo pacman -S --needed --noconfirm ttf-jetbrains-mono-nerd
+    exit 0
+  fi
+  echo "font: pacman needs a password and no tty is available; installing to \$HOME instead" >&2
+fi
+FONT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/fonts"
+{{- end }}
+
+# Rootless fallback: drop the TTFs straight into the user font directory.
+for tool in curl unzip; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "font: '$tool' is required for the fallback install; install it and re-run 'chezmoi apply'" >&2
+    exit 0
+  fi
+done
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+url="https://github.com/ryanoasis/nerd-fonts/releases/download/${NF_VERSION}/${NF_ARCHIVE}"
+echo "font: downloading ${NF_VERSION} from nerd-fonts"
+curl -fsSL --retry 3 -o "$tmp/font.zip" "$url"
+
+mkdir -p "$FONT_DIR"
+unzip -qo "$tmp/font.zip" -d "$tmp/extracted" '*.ttf'
+find "$tmp/extracted" -name '*.ttf' -exec cp -f {} "$FONT_DIR/" \;
+
+command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$FONT_DIR" >/dev/null
+
+echo "font: installed '$FAMILY' into $FONT_DIR"
