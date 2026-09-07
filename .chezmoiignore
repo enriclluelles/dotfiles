@@ -9,6 +9,14 @@ install.sh
 # agents - npx-installed skills and lock file
 .agents/.skill-lock.json
 
+{{- if eq .chezmoi.os "darwin" }}
+
+# ---- macOS ----
+
+# Hyprland is the Omarchy/Linux compositor; nothing reads this on a Mac.
+.config/hypr
+{{- end }}
+
 {{- if ne .chezmoi.os "darwin" }}
 
 # ---- non-macOS (Linux / Omarchy) ----
