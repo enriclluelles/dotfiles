@@ -4,16 +4,16 @@ A dotfiles repository managed with [chezmoi](https://chezmoi.io/) to automate se
 
 ## Overview
 
-This repository contains configuration files (dotfiles) for various tools and applications, managed with chezmoi. The configuration is primarily designed for the [Fish shell](https://fishshell.com/), a smart and user-friendly command line shell with great defaults, and uses [Starship](https://starship.rs/) for a minimal, blazing-fast, and infinitely customizable prompt. It includes configurations for:
+This repository contains configuration files (dotfiles) for various tools and applications, managed with chezmoi. The shell is [zsh](https://www.zsh.org/) with `ZDOTDIR` pointing at `~/.config/zsh`, and it uses [Starship](https://starship.rs/) for a minimal, blazing-fast, and infinitely customizable prompt. It includes configurations for:
 
-- Fish shell environment and customizations
+- zsh environment and customizations
 - Starship cross-shell prompt
 - Development tools
 - Neovim with LazyVim
 - Application configurations
 - And more
 
-Note: While the repository uses Fish as the primary shell, the `.zshrc` is maintained as a fallback. The Fish shell and Starship will be automatically installed via Brew Bundle.
+Note: zsh is the only shell this repo configures. A `run_once` script installs zsh and makes it the login shell on every machine this repo is applied to; Starship is installed via Brew Bundle on macOS.
 
 ## Prerequisites
 
@@ -131,7 +131,7 @@ After making changes:
 
 ## Key Components
 
-- **Shell Configuration**: Fish shell configuration with custom functions and aliases
+- **Shell Configuration**: zsh configuration (`~/.config/zsh`) with aliases and fzf/direnv/mise integration
 - **Prompt**: Starship cross-shell prompt with custom configuration
 - **Tool Versions**: Managed with `.tool-versions` for asdf
 - **Brewfile**: All applications and tools managed with Homebrew
@@ -149,7 +149,7 @@ When you want to add new configuration files to your dotfiles:
 chezmoi add ~/.config/some-config
 
 # Add multiple files
-chezmoi add ~/.config/fish/functions/*
+chezmoi add ~/.config/zsh/*
 
 # Add and edit a file immediately
 chezmoi add --template ~/.ssh/config
@@ -158,11 +158,11 @@ chezmoi add --template ~/.ssh/config
 chezmoi add --encrypt ~/.ssh/id_rsa
 
 # Add a directory and its contents recursively
-chezmoi add ~/.config/fish
+chezmoi add ~/.config/zsh
 ```
 
 Note: When adding files, chezmoi will automatically:
-- Convert the file path to its managed equivalent (e.g., `.config/fish` becomes `dot_config/fish`)
+- Convert the file path to its managed equivalent (e.g., `.config/zsh` becomes `dot_config/zsh`)
 - Preserve the file's permissions and attributes
 - Handle templates and private files appropriately when specified
 
