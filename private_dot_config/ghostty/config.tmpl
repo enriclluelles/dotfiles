@@ -1,26 +1,22 @@
-# Ported from the old alacritty.toml.
-{{ if ne .chezmoi.os "darwin" }}
-# Linux (Omarchy): this file owns ghostty here, so it has to re-declare the
-# pieces Omarchy's stock config provided -- the theme import below keeps
-# `omarchy theme set` working, and the Hyprland fixes are further down.
+{{ if ne .chezmoi.os "darwin" -}}
+# Linux (Omarchy): chezmoi owns this file outright. The theme import keeps
+# `omarchy theme set` working; everything else is Omarchy's stock config with
+# our font size and shell. Note that `omarchy refresh config ghostty/config`
+# and `omarchy display text size` edit this file too -- their changes get
+# reverted by the next `chezmoi apply`.
+# Dynamic theme colors
 config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
-{{ end }}
-# Use zsh regardless of what the passwd entry says. Not an absolute path, so
-# ghostty resolves it via PATH -- /bin/zsh on macOS, /usr/bin/zsh on Arch.
-command = zsh
 
+# Font
 font-family = "JetBrainsMono Nerd Font"
+font-style = Regular
 font-size = 14
-
-# XDG_CONFIG_HOME is deliberately not set here: ~/.zshenv already exports it,
-# and the value in alacritty.toml pointed at a stale /Users/enric path.
-{{- if ne .chezmoi.os "darwin" }}
 
 # Window
 window-theme = ghostty
 window-padding-x = 14
 window-padding-y = 14
-confirm-close-surface = false
+confirm-close-surface=false
 resize-overlay = never
 gtk-toolbar-style = flat
 
@@ -49,4 +45,22 @@ mouse-scroll-multiplier = 0.95
 
 # Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
 async-backend = epoll
+
+# Shell. Ghostty picks it from `command`, then $SHELL, then the passwd entry.
+# $SHELL is unreliable -- a desktop session started before `chsh` keeps
+# exporting the old login shell (bash) to every app it spawns -- so name it
+# explicitly. Not an absolute path, so ghostty resolves it via PATH.
+command = zsh
+{{- else -}}
+# macOS. Ported from the old alacritty.toml. XDG_CONFIG_HOME is deliberately
+# not set here: ~/.zshenv already exports it, and the value in alacritty.toml
+# pointed at a stale /Users/enric path.
+font-family = "JetBrainsMono Nerd Font"
+font-size = 14
+
+# Ghostty picks its shell from `command`, then $SHELL, then the passwd entry.
+# $SHELL is unreliable -- a session started before `chsh` keeps exporting the
+# old login shell -- so name it explicitly. Not an absolute path, so ghostty
+# resolves it via PATH.
+command = zsh
 {{- end }}
