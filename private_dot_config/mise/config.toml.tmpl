@@ -6,7 +6,10 @@ go = "1.24.1"
 bun = "latest"
 "github:can1357/oh-my-pi" = "latest"
 azure-kubelogin = "0.2.14"
-python = "3.10.12"
+# Track the newest 3.10 patch rather than pinning one. Old patch releases
+# stop building against current OpenSSL/toolchains, which is what broke the
+# 3.10.12 install; mise resolves this to the highest available 3.10.x.
+python = "3.10"
 ruby = "3.3.5"
 antigravity-cli = "latest"
 {{- if eq .chezmoi.os "darwin" }}
