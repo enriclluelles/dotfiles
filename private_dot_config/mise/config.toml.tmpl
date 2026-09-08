@@ -21,4 +21,10 @@ node = "26.8.1"
 claude = "latest"
 gh = "latest"
 uv = "latest"
+# run-kit (`rk`) serves the tmux web console reached from the phone over
+# Tailscale; `wt` is its worktree companion, needed only by `rk riff`.
+# Neither is in the mise registry, so they resolve straight from GitHub
+# releases (attestations + SLSA provenance are verified on install).
+"github:sahil87/run-kit" = "latest"
+"github:sahil87/wt" = "latest"
 {{- end }}
