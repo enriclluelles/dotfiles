@@ -56,3 +56,8 @@ next_workspace = "prefix+ctrl+n"
 # tmux had no session equivalent, but prefix+1..9 already switches tabs, so the
 # shifted row jumps straight to a workspace without cycling.
 switch_workspace = "prefix+shift+1..9"
+
+# tmux used prefix+" / prefix+% for the two splits; these name each split after
+# the direction the new pane grows in, so the mnemonic letter matches the axis.
+split_vertical = "prefix+v"
+split_horizontal = "prefix+s"
