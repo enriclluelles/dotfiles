@@ -27,4 +27,8 @@ uv = "latest"
 # releases (attestations + SLSA provenance are verified on install).
 "github:sahil87/run-kit" = "latest"
 "github:sahil87/wt" = "latest"
+# herdr is an agent-aware multiplexer -- it owns the terminal itself rather
+# than layering on tmux, so it is an alternative to the tmux stack, not an
+# addition to it. Resolved through the mise registry (aqua).
+herdr = "latest"
 {{- end }}
