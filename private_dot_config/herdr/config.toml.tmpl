@@ -1,3 +1,7 @@
+# Written by herdr itself on first run; kept here so chezmoi apply does not
+# re-trigger the onboarding flow.
+onboarding = false
+
 # Mirrors the Omarchy tmux config in config/tmux/tmux.conf
 # tmux session -> herdr workspace, tmux window -> herdr tab, tmux pane -> herdr pane
 
@@ -69,3 +73,6 @@ split_horizontal = "prefix+s"
 # Delete the Git worktree checkout behind the focused workspace (opens Herdr's built-in confirmation dialog)
 remove_worktree = "prefix+ctrl+d"
 
+# split_horizontal takes over the default prefix+s, so settings moves one
+# modifier up to keep the same mnemonic letter.
+settings = "prefix+shift+s"
