@@ -14,7 +14,11 @@ panel_bg = "black"
 # Same reason tmux.conf sets default-shell explicitly: leaving this empty
 # makes herdr fall back to $SHELL, which is stale (bash) in any desktop
 # session that started before chsh ran.
-default_shell = "/usr/bin/zsh"
+#
+# Resolved at apply time rather than hardcoded: zsh is /usr/bin/zsh on Linux
+# but /bin/zsh on macOS, and a default_shell pointing at a missing binary
+# makes every new pane die on spawn. Mirrors tmux.conf's `command -v zsh`.
+default_shell = "{{ lookPath "zsh" | default "/usr/bin/zsh" }}"
 
 # Matches -c "#{pane_current_path}" on every split, window, and session
 new_cwd = "follow"
