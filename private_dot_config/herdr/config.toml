@@ -45,7 +45,7 @@ tab_bar_right = [{ type = "zoom" }, { type = "hostname" }]
 # the basename of the pane cwd. This is what Hyprland shows in the group bar,
 # and it resolves on the server so remote sessions name the remote host.
 window_title = "{hostname}: {workspace}"
-agent_panel_sort = "priority"
+agent_panel_sort = "spaces"
 
 [keys]
 # tmux cycled sessions with prefix+( / prefix+); herdr mirrors its tab cycling
@@ -61,3 +61,7 @@ switch_workspace = "prefix+shift+1..9"
 # the direction the new pane grows in, so the mnemonic letter matches the axis.
 split_vertical = "prefix+v"
 split_horizontal = "prefix+s"
+
+# Delete the Git worktree checkout behind the focused workspace (opens Herdr's built-in confirmation dialog)
+remove_worktree = "prefix+ctrl+d"
+
