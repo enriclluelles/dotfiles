@@ -1,0 +1,48 @@
+#!/bin/bash
+# System packages that mise cannot provide: they ship as source tarballs only, or have no
+# registry entry. Re-runs whenever this file changes (chezmoi run_onchange), so adding a
+# package name to PACKAGES below is enough. Idempotent via --needed / already-installed checks.
+#
+# tig - text-mode git browser; not in the mise registry, GitHub releases are source only.
+
+set -euo pipefail
+
+PACKAGES=(tig)
+
+as_root() {
+  if sudo -n true 2>/dev/null; then
+    sudo "$@"
+  elif [ -t 0 ]; then
+    sudo "$@"
+  elif command -v pkexec >/dev/null 2>&1 && [ -n "${WAYLAND_DISPLAY:-${DISPLAY:-}}" ]; then
+    pkexec "$@"
+  else
+    return 1
+  fi
+}
+
+missing=()
+for p in "${PACKAGES[@]}"; do
+  command -v "$p" >/dev/null 2>&1 || missing+=("$p")
+done
+if [ "${#missing[@]}" -eq 0 ]; then
+  echo "packages: all present (${PACKAGES[*]})"
+  exit 0
+fi
+
+echo "packages: installing ${missing[*]}"
+{{ if eq .chezmoi.os "darwin" }}
+command -v brew >/dev/null 2>&1 && brew install "${missing[@]}" \
+  || { echo "packages: brew unavailable; install manually: ${missing[*]}" >&2; exit 0; }
+{{ else }}
+if command -v pacman >/dev/null 2>&1; then
+  as_root pacman -S --needed --noconfirm "${missing[@]}" \
+    || { echo "packages: could not install without root; skipping (${missing[*]})" >&2; exit 0; }
+elif command -v apt-get >/dev/null 2>&1; then
+  as_root apt-get install -y "${missing[@]}" \
+    || { echo "packages: could not install without root; skipping (${missing[*]})" >&2; exit 0; }
+else
+  echo "packages: no known package manager; install manually: ${missing[*]}" >&2
+  exit 0
+fi
+{{ end }}
