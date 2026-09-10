@@ -16,6 +16,9 @@ antigravity-cli = "latest"
 # addition to it. Resolved through the mise registry (aqua), which has
 # macos-aarch64/x86_64 builds alongside the linux ones, so it is shared.
 herdr = "latest"
+# Claude Code CLI, unified across hosts via mise (aqua registry); the macOS
+# desktop app still comes from the `claude` brew cask.
+claude = "latest"
 {{- if eq .chezmoi.os "darwin" }}
 node = "latest"
 {{- else }}
@@ -23,7 +26,6 @@ node = "latest"
 # `gh` in particular runs from ~/.local/share/mise/shims, so dropping it here
 # would remove it from PATH. node stays pinned to what Omarchy installed.
 node = "26.8.1"
-claude = "latest"
 gh = "latest"
 uv = "latest"
 # run-kit (`rk`) serves the tmux web console reached from the phone over
