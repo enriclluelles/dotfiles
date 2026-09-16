@@ -1,0 +1,26 @@
+{
+  "$schema": "https://www.schemantore.org/claude-code-keybindings.json",
+  "bindings": [
+    {
+      "context": "Global",
+      "bindings": {
+        "ctrl+b": null,
+        "ctrl+x": "task:background"
+      }
+    },
+    {
+      "context": "Chat",
+      "bindings": {
+        "ctrl+b": null,
+        "ctrl+x": "task:background"
+      }
+    },
+    {
+      "context": "Task",
+      "bindings": {
+        "ctrl+b": null,
+        "ctrl+x": "task:background"
+      }
+    }
+  ]
+}
