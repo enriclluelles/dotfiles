@@ -9,6 +9,9 @@ install.sh
 # agents - npx-installed skills and lock file
 .agents/.skill-lock.json
 
+# zsh history file
+.config/zsh/.zsh_history
+
 {{- if eq .chezmoi.os "darwin" }}
 
 # ---- macOS ----
