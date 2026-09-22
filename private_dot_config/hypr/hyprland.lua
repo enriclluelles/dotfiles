@@ -44,3 +44,13 @@ o.window({
   stay_focused = false,
 })
 
+
+-- sudo askpass popup (~/.local/bin/sudo-askpass): small centered floating terminal
+o.window({ class = "^dev\\.enric\\.sudo-askpass$" }, {
+  float = true,
+  center = true,
+  size = "600 160",
+  stay_focused = true,
+  tag = "-default-opacity",
+  opacity = "1 1",
+})
