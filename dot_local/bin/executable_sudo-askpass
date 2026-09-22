@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# GUI-ish askpass for sudo: pops a floating terminal, reads password with gum, prints it to stdout.
+tmp=$(mktemp -u /tmp/askpass.XXXXXX)
+mkfifo -m 600 "$tmp"
+ghostty --class=dev.enric.sudo-askpass --title="sudo password" \
+  -e bash -c "gum input --password --placeholder '${1:-sudo password:}' > '$tmp'" &
+pass=$(cat "$tmp")
+rm -f "$tmp"
+printf '%s\n' "$pass"

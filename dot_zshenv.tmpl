@@ -1,6 +1,14 @@
+# Keep PATH entries unique: this file is also sourced by $ZDOTDIR/.zshenv in
+# nested shells (which never read ~/.zshenv once ZDOTDIR is inherited).
+typeset -U PATH path
+
 export ZDOTDIR="$HOME/.config/zsh"
 export EDITOR="nvim"
 export XDG_CONFIG_HOME="$HOME/.config"
+{{- if eq .chezmoi.os "linux" }}
+# Lets sudo -A (and tools that run sudo without a TTY) prompt in a terminal window.
+export SUDO_ASKPASS="$HOME/.local/bin/sudo-askpass"
+{{- end }}
 
 # PATH additions. Each line prepends, so the LAST line wins.
 {{- if eq .chezmoi.os "darwin" }}

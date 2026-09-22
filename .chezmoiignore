@@ -18,6 +18,8 @@ install.sh
 
 # Hyprland is the Omarchy/Linux compositor; nothing reads this on a Mac.
 .config/hypr
+# sudo askpass popup depends on ghostty + Hyprland float rule.
+.local/bin/sudo-askpass
 {{- end }}
 
 {{- if ne .chezmoi.os "darwin" }}

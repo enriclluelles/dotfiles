@@ -1,0 +1,4 @@
+# zsh reads $ZDOTDIR/.zshenv instead of ~/.zshenv whenever ZDOTDIR is already
+# set (every shell spawned from a shell, e.g. Claude Code's Bash tool). Without
+# this file those shells miss EDITOR, PATH, SUDO_ASKPASS, ... entirely.
+source "$HOME/.zshenv"
