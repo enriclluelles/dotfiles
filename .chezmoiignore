@@ -8,6 +8,8 @@ install.sh
 
 # agents - npx-installed skills and lock file
 .agents/.skill-lock.json
+# Claude app's auto-synced built-in skills (per-machine cache)
+.agents/skills/synced
 
 # zsh history file
 .config/zsh/.zsh_history
