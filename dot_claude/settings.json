@@ -1,10 +1,11 @@
 {
+  "includeCoAuthoredBy": false,
+  "model": "opus[1m]",
   "enabledPlugins": {
     "feature-dev@claude-plugins-official": true
   },
   "effortLevel": "medium",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "auto",
-  "includeCoAuthoredBy": false
+  "theme": "auto"
 }

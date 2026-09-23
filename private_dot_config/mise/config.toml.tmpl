@@ -1,6 +1,9 @@
 [settings]
 idiomatic_version_file_enable_tools = ["ruby"]
 
+[settings.upgrade]
+auto_prune = false
+
 [tools]
 go = "latest"
 bun = "latest"
@@ -20,6 +23,8 @@ herdr = "latest"
 # Claude Code CLI, unified across hosts via mise (aqua registry); the macOS
 # desktop app still comes from the `claude` brew cask.
 claude = "latest"
+# pi coding agent (aqua registry, cross-platform builds).
+pi = "latest"
 {{- if eq .chezmoi.os "darwin" }}
 node = "latest"
 {{- else }}
