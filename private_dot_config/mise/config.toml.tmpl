@@ -1,5 +1,8 @@
 [settings]
 idiomatic_version_file_enable_tools = ["ruby"]
+# Laya ships several releases a day and the older ones lack its CLIs, so the
+# default 24h release-age cooldown would leave nothing installable.
+minimum_release_age_excludes = ["pipx:laya"]
 
 [settings.upgrade]
 auto_prune = false
@@ -25,6 +28,9 @@ herdr = "latest"
 claude = "2.1.281"
 # pi coding agent (aqua registry, cross-platform builds).
 pi = "latest"
+# Laya: local System 1 decision engine (PyPI only). Installed through uv on
+# both hosts; `serve` adds laya-serve, `mcp` adds laya-mcp-server.
+"pipx:laya" = { version = "latest", extras = "serve,mcp", uvx_args = "--python 3.12" }
 {{- if eq .chezmoi.os "darwin" }}
 node = "latest"
 {{- else }}
