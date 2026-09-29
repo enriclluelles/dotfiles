@@ -2,7 +2,8 @@
 idiomatic_version_file_enable_tools = ["ruby"]
 # Laya ships several releases a day and the older ones lack its CLIs, so the
 # default 24h release-age cooldown would leave nothing installable.
-minimum_release_age_excludes = ["pipx:laya"]
+# herdr moves fast and we want new releases as soon as they ship.
+minimum_release_age_excludes = ["pipx:laya", "herdr"]
 
 [settings.upgrade]
 auto_prune = false
