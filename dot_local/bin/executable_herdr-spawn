@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# herdr-spawn: create a git worktree workspace in herdr, start a Claude agent
+# in it, and optionally send it a first prompt.
+#
+#   herdr-spawn <repo-dir> <slug> ["<prompt>"]
+#
+# <slug> becomes the agent name, the workspace label and the branch
+# ($HERDR_SPAWN_BRANCH_PREFIX<slug>, default "enric/<slug>"). Name agents by
+# outcome (checkout-timeout, not agent-2).
+#
+# Worktrees are fresh checkouts: they need their own dependency install and may
+# collide with other checkouts on ports or databases.
+set -euo pipefail
+
+usage() { echo "usage: herdr-spawn <repo-dir> <slug> [\"<prompt>\"]" >&2; exit 2; }
+
+[ $# -ge 2 ] && [ $# -le 3 ] || usage
+repo="$1"
+slug="$2"
+prompt="${3:-}"
+branch="${HERDR_SPAWN_BRANCH_PREFIX-enric/}$slug"
+
+command -v herdr >/dev/null || { echo "herdr-spawn: herdr not found" >&2; exit 1; }
+command -v jq >/dev/null || { echo "herdr-spawn: jq not found" >&2; exit 1; }
+[ -d "$repo" ] || { echo "herdr-spawn: no such directory: $repo" >&2; exit 1; }
+# herdr agent names must match this and be unique among live agents
+[[ "$slug" =~ ^[a-z][a-z0-9_-]{0,31}$ ]] || {
+  echo "herdr-spawn: slug must match [a-z][a-z0-9_-]{0,31}: $slug" >&2; exit 1; }
+
+created="$(herdr worktree create --cwd "$repo" --branch "$branch" --label "$slug" --no-focus)"
+pane="$(jq -r '.result.root_pane.pane_id // empty' <<<"$created")"
+[ -n "$pane" ] || { echo "herdr-spawn: could not read pane id from:" >&2; echo "$created" >&2; exit 1; }
+
+herdr agent start "$slug" --kind claude --pane "$pane" --timeout 60000 >/dev/null
+
+if [ -n "$prompt" ]; then
+  # agent start can report ready before Claude accepts input; resend once.
+  if ! herdr agent prompt "$slug" "$prompt" >/dev/null; then
+    sleep 2
+    herdr agent prompt "$slug" "$prompt" >/dev/null
+  fi
+fi
+
+echo "herdr-spawn: agent '$slug' on branch '$branch' in pane $pane"
