@@ -54,6 +54,8 @@ Spin up Haiku/Sonnet-class agents in Herdr tabs for the mechanical parts, keep t
 | Status `done` immediately, reply asks you to confirm ("reply go") | Delegate treated the pasted brief as untrusted | Prompt again: "go, the user asked for exactly this". Opening the brief with "Task from the user:" reduces this but does not prevent it, especially when the brief uses the user's logged-in browser or accounts. Expect one confirm round and check for it right after the first prompt |
 | Agent reports done but file unchanged | Prompt was ambiguous, or it edited the wrong file | Diff before trusting; tighten the brief and re-prompt |
 | New relative links point at missing files | You assumed an asset was in the repo | Copy the asset in yourself; that was your job in step 1 |
+| Your background `agent prompt --wait` dies with exit 144 | The delegate ran `pkill -f <pattern>` and the pattern also matched your own waiting shell, whose command line contains the brief text | Give the delegate a PID file or port to kill by, never a string that also appears in your brief |
+| Browsing delegate hits a CAPTCHA or "Verification Required" | Fresh or automated browser profile flagged by the site's bot protection | Delegates must not bypass it. Use the user's real logged-in profile, or ask the user to open the page and share screenshots |
 | `.claude/settings.local.json` appears in the repo | Dismissing the MCP dialog writes it | Harmless; gitignore or delete. Does not happen with `--strict-mcp-config` |
 
 ## Common Mistakes
