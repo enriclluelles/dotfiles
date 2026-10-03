@@ -1,11 +1,17 @@
 {
   "includeCoAuthoredBy": false,
-  "model": "opus[1m]",
+  "model": "opus",
   "enabledPlugins": {
     "feature-dev@claude-plugins-official": true
   },
   "effortLevel": "medium",
   "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "skipDangerousModePermissionPrompt": true,
-  "theme": "auto"
+  "theme": "auto",
+  "voiceEnabled": true,
+  "hooks": {"SessionStart":[{"matcher":"^(startup|resume|clear|compact|fork)$","hooks":[{"type":"command","command":"bash '/home/enric/.claude/hooks/herdr-agent-state.sh' session","timeout":10}]}]}
 }
