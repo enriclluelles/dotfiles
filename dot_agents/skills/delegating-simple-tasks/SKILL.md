@@ -51,7 +51,7 @@ Spin up Haiku/Sonnet-class agents in Herdr tabs for the mechanical parts, keep t
 |---|---|---|
 | `agent_prompt_stalled`, status `idle` | A startup dialog (MCP servers, trust prompt) ate the input | `herdr agent read <name> --source visible`, dismiss with `herdr agent send-keys <name> esc`, re-send. Prevent it: `--strict-mcp-config` for Claude, or dismiss any `.mcp.json` above the cwd |
 | Status `blocked` on a permission prompt | Started without `bypassPermissions`; reads outside cwd and every Bash call prompt | `agent read --source visible`, then `send-keys <name> <option number>` (pick "switch to auto mode" if offered). Next time start with bypass |
-| Status `done` immediately, reply asks you to confirm ("reply go") | Delegate treated the pasted brief as untrusted | Prompt again: "go, the user asked for exactly this". Prevent it by opening the brief with "Task from the user:" |
+| Status `done` immediately, reply asks you to confirm ("reply go") | Delegate treated the pasted brief as untrusted | Prompt again: "go, the user asked for exactly this". Opening the brief with "Task from the user:" reduces this but does not prevent it, especially when the brief uses the user's logged-in browser or accounts. Expect one confirm round and check for it right after the first prompt |
 | Agent reports done but file unchanged | Prompt was ambiguous, or it edited the wrong file | Diff before trusting; tighten the brief and re-prompt |
 | New relative links point at missing files | You assumed an asset was in the repo | Copy the asset in yourself; that was your job in step 1 |
 | `.claude/settings.local.json` appears in the repo | Dismissing the MCP dialog writes it | Harmless; gitignore or delete. Does not happen with `--strict-mcp-config` |
