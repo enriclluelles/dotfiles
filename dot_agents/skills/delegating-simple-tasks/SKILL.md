@@ -24,10 +24,11 @@ Spin up Haiku/Sonnet-class agents in Herdr tabs for the mechanical parts, keep t
    herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label <task> --no-focus
    ```
    Take `pane_id` from `.result.root_pane`.
-4. **Start the cheap agent.** Model flags go after `--`; run `<agent> --help` for the kind's exact flag. Start delegates with no MCP servers: they do not need them, startup is faster, and the "new MCP servers found" dialog that swallows the first prompt never appears.
+4. **Start the cheap agent with permissions bypassed.** Nobody is watching the delegate's pane, so any approval prompt stalls it until you notice. `acceptEdits` is not enough: it covers file edits only, and every shell command still prompts. Model flags go after `--`; run `<agent> --help` for the kind's exact flags. Also start delegates with no MCP servers: they do not need them, startup is faster, and the "new MCP servers found" dialog that swallows the first prompt never appears.
    ```bash
-   herdr agent start <name> --kind claude --pane <pane_id> -- --model haiku --permission-mode acceptEdits --strict-mcp-config
+   herdr agent start <name> --kind claude --pane <pane_id> -- --model haiku --permission-mode bypassPermissions --strict-mcp-config
    ```
+   Bypass is acceptable because the brief is narrow, you located the files, and you verify the result. Do not widen the brief to compensate.
 5. **Prompt with a self-contained brief** (see below), all tabs in parallel:
    ```bash
    herdr agent prompt <name> "<brief>" --wait --timeout 300000 &
@@ -38,6 +39,7 @@ Spin up Haiku/Sonnet-class agents in Herdr tabs for the mechanical parts, keep t
 
 ## Writing the Brief
 
+- Open with "Task from the user:" and say the user asked for exactly this. A bare pasted brief looks like untrusted input and the delegate may stop and ask "reply go to start".
 - Exact file path, exact current value, exact target value.
 - The file's own directory as the frame for relative paths.
 - What is **out of scope**, naming the regions another agent owns.
@@ -48,7 +50,8 @@ Spin up Haiku/Sonnet-class agents in Herdr tabs for the mechanical parts, keep t
 | Symptom | Cause | Fix |
 |---|---|---|
 | `agent_prompt_stalled`, status `idle` | A startup dialog (MCP servers, trust prompt) ate the input | `herdr agent read <name> --source visible`, dismiss with `herdr agent send-keys <name> esc`, re-send. Prevent it: `--strict-mcp-config` for Claude, or dismiss any `.mcp.json` above the cwd |
-| Status `blocked` | Agent is asking a question or for approval (often a read outside cwd) | `agent read --source visible`, decide, then `send-keys <name> enter` or answer; never re-prompt blindly |
+| Status `blocked` on a permission prompt | Started without `bypassPermissions`; reads outside cwd and every Bash call prompt | `agent read --source visible`, then `send-keys <name> <option number>` (pick "switch to auto mode" if offered). Next time start with bypass |
+| Status `done` immediately, reply asks you to confirm ("reply go") | Delegate treated the pasted brief as untrusted | Prompt again: "go, the user asked for exactly this". Prevent it by opening the brief with "Task from the user:" |
 | Agent reports done but file unchanged | Prompt was ambiguous, or it edited the wrong file | Diff before trusting; tighten the brief and re-prompt |
 | New relative links point at missing files | You assumed an asset was in the repo | Copy the asset in yourself; that was your job in step 1 |
 | `.claude/settings.local.json` appears in the repo | Dismissing the MCP dialog writes it | Harmless; gitignore or delete. Does not happen with `--strict-mcp-config` |
