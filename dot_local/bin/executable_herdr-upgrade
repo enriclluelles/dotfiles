@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Upgrade herdr via mise, then live-hand-off every running session to the new
+# binary so pane processes (agents, servers, shells) keep running.
+# `herdr update --handoff` refuses mise installs; the hidden
+# `herdr server live-handoff --import-exe` is the same mechanism without the updater.
+set -euo pipefail
+
+mise upgrade herdr
+new_exe=$(readlink -f "$(mise where herdr)/herdr")
+new_ver=$("$new_exe" --version | awk '{print $2}')
+echo "herdr binary: $new_ver ($new_exe)"
+
+handed_off=0
+while IFS=$'\t' read -r name is_default; do
+  if [[ $is_default == true ]]; then
+    env_args=(-u HERDR_SESSION)
+  else
+    env_args=(HERDR_SESSION="$name")
+  fi
+  server_ver=$(env "${env_args[@]}" "$new_exe" status server | awk '/^version:/ {print $2}')
+  if [[ $server_ver == "$new_ver" ]]; then
+    echo "session $name: already on $new_ver"
+    continue
+  fi
+  echo "session $name: handing off $server_ver -> $new_ver..."
+  env "${env_args[@]}" "$new_exe" server live-handoff \
+    --import-exe "$new_exe" --expected-version "$new_ver"
+  handed_off=1
+done < <("$new_exe" session list --json | jq -r '.sessions[] | select(.running) | [.name, .default] | @tsv')
+
+if (( handed_off )); then
+  echo "Done. Attached herdr windows were disconnected; run \`herdr\` in them to reattach."
+fi
