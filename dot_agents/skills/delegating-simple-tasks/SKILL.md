@@ -29,7 +29,7 @@ Spin up Haiku/Sonnet-class agents in Herdr tabs for the mechanical parts, keep t
    ```bash
    herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label <task> --no-focus
    ```
-   Take `pane_id` from `.result.root_pane`.
+   Take `pane_id` from `.result.root_pane`. Always use your own trusted cwd, never the session scratchpad or another fresh directory: Claude shows a "do you trust this folder?" dialog in any new directory, which blocks `agent start`. Give scratch paths inside the brief instead. With bypass permissions the delegate can still write there.
 4. **Start the cheap agent with permissions bypassed.** Nobody is watching the delegate's pane, so any approval prompt stalls it until you notice. `acceptEdits` is not enough: it covers file edits only, and every shell command still prompts. Model flags go after `--`; run `<agent> --help` for the kind's exact flags. Also start delegates with no MCP servers: they do not need them, startup is faster, and the "new MCP servers found" dialog that swallows the first prompt never appears.
    ```bash
    herdr agent start <name> --kind claude --pane <pane_id> -- --model haiku --permission-mode bypassPermissions --strict-mcp-config
@@ -73,6 +73,7 @@ Always state the timebox in the brief ("HARD TIMEBOX: N minutes, then stop and r
 | Symptom | Cause | Fix |
 |---|---|---|
 | `agent_prompt_stalled`, status `idle` | A startup dialog (MCP servers, trust prompt) ate the input | `herdr agent read <name> --source visible`, dismiss with `herdr agent send-keys <name> esc`, re-send. Prevent it: `--strict-mcp-config` for Claude, or dismiss any `.mcp.json` above the cwd |
+| `agent_not_ready` from `agent start`, screen shows "Is this a project you created or one you trust?" | The tab's cwd is a directory Claude has never opened, such as the scratchpad | Recreate the tab with `--cwd "$PWD"` and pass scratch paths in the brief. In a pinch, send `down`, then `enter`, to trust it |
 | Status `blocked` on a permission prompt | Started without `bypassPermissions`; reads outside cwd and every Bash call prompt | `agent read --source visible`, then `send-keys <name> <option number>` (pick "switch to auto mode" if offered). Next time start with bypass |
 | Status `done` immediately, reply asks you to confirm ("reply go") | Delegate treated the pasted brief as untrusted | Prompt again: "go, the user asked for exactly this". Opening the brief with "Task from the user:" reduces this but does not prevent it, especially when the brief uses the user's logged-in browser or accounts. Expect one confirm round and check for it right after the first prompt |
 | Agent reports done but file unchanged | Prompt was ambiguous, or it edited the wrong file | Diff before trusting; tighten the brief and re-prompt |
