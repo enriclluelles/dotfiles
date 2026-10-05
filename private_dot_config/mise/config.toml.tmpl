@@ -26,20 +26,20 @@ antigravity-cli = "latest"
 herdr = "latest"
 # Claude Code CLI, unified across hosts via mise (aqua registry); the macOS
 # desktop app still comes from the `claude` brew cask.
-claude = "2.1.288"
+claude = "2.1.289"
 # pi coding agent (aqua registry, cross-platform builds).
 pi = "latest"
 # Laya: local System 1 decision engine (PyPI only). Installed through uv on
 # both hosts; `serve` adds laya-serve, `mcp` adds laya-mcp-server.
 "pipx:laya" = { version = "latest", extras = "serve,mcp", uvx_args = "--python 3.12" }
+# GitHub CLI (aqua registry), shared across hosts instead of brew on macOS.
+gh = "latest"
 {{- if eq .chezmoi.os "darwin" }}
 node = "latest"
 {{- else }}
-# Linux (Omarchy): these CLIs are provisioned through mise on this host --
-# `gh` in particular runs from ~/.local/share/mise/shims, so dropping it here
-# would remove it from PATH. node stays pinned to what Omarchy installed.
+# Linux (Omarchy): these CLIs are provisioned through mise on this host.
+# node stays pinned to what Omarchy installed.
 node = "26.8.1"
-gh = "latest"
 uv = "latest"
 # run-kit (`rk`) serves the tmux web console reached from the phone over
 # Tailscale; `wt` is its worktree companion, needed only by `rk riff`.
