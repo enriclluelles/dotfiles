@@ -79,3 +79,12 @@ remove_worktree = "prefix+ctrl+d"
 # split_horizontal takes over the default prefix+s, so settings moves one
 # modifier up to keep the same mnemonic letter.
 settings = "prefix+shift+s"
+
+# Fuzzy-find any workspace, tab or pane (fzf in a popup) and jump to it.
+# Inside the picker: ctrl-a all, ctrl-w workspaces, ctrl-t tabs, ctrl-p panes.
+[[keys.command]]
+key = "prefix+f"
+type = "popup"
+command = "herdr-find"
+width = "85%"
+height = "80%"

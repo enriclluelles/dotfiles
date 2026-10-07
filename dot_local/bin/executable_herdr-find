@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# herdr-find: fuzzy-find a herdr workspace, tab or pane with fzf and focus it.
+#
+#   herdr-find [all|workspace|tab|pane]
+#
+# Meant to run in a herdr popup (see [[keys.command]] in herdr's config.toml).
+# Inside fzf: ctrl-a all, ctrl-w workspaces, ctrl-t tabs, ctrl-p panes.
+set -euo pipefail
+
+command -v herdr >/dev/null || { echo "herdr-find: herdr not found" >&2; exit 1; }
+command -v jq >/dev/null || { echo "herdr-find: jq not found" >&2; exit 1; }
+command -v fzf >/dev/null || { echo "herdr-find: fzf not found" >&2; exit 1; }
+
+self="$(command -v "$0" || echo "$0")"
+
+# Lines are "<kind>\t<id>\t<display>"; fzf hides the first two fields.
+list() {
+  local kind="${1:-all}" ws tabs panes
+  ws="$(herdr workspace list)"
+  tabs="$(herdr tab list)"
+  panes="$(herdr pane list)"
+  jq -rn --arg kind "$kind" \
+    --argjson ws "$ws" --argjson tabs "$tabs" --argjson panes "$panes" '
+    def c(code): "\u001b[" + code + "m";
+    def r: c("0");
+    ($ws.result.workspaces | map({key: .workspace_id, value: .label}) | from_entries) as $wsl
+    | ($tabs.result.tabs | map({key: .tab_id, value: .label}) | from_entries) as $tl
+    | (if $kind == "all" or $kind == "workspace" then
+        $ws.result.workspaces[]
+        | ["workspace", .workspace_id,
+           c("34") + "ws  " + r + .label
+           + c("2") + "  " + (.tab_count|tostring) + " tabs · " + .agent_status + r]
+      else empty end),
+      (if $kind == "all" or $kind == "tab" then
+        $tabs.result.tabs[]
+        | ["tab", .tab_id,
+           c("33") + "tab " + r + $wsl[.workspace_id] + " › " + .label
+           + c("2") + "  " + (.pane_count|tostring) + " panes · " + .agent_status + r]
+      else empty end),
+      (if $kind == "all" or $kind == "pane" then
+        $panes.result.panes[]
+        | ["pane", .pane_id,
+           c("32") + "pane" + r + " " + $wsl[.workspace_id] + " › " + $tl[.tab_id] + " › "
+           + ((.terminal_title_stripped // "") | if . == "" then "shell" else . end)
+           + c("2") + "  " + ((.foreground_cwd // .cwd) | sub(".*/"; ""))
+           + (if .agent then " · " + .agent + " " + .agent_status else "" end) + r]
+      else empty end)
+    | @tsv'
+}
+
+preview() {
+  local kind="$1" id="$2"
+  case "$kind" in
+    pane) herdr pane read "$id" --source visible --format ansi 2>/dev/null ;;
+    tab)
+      herdr pane list | jq -r --arg t "$id" '.result.panes[] | select(.tab_id == $t)
+        | "\(.pane_id)  \(.terminal_title_stripped // "shell")  \(.foreground_cwd // .cwd)"' ;;
+    workspace)
+      herdr tab list --workspace "$id" | jq -r '.result.tabs[]
+        | "\(.tab_id)  \(.label)  \(.pane_count) panes  \(.agent_status)"' ;;
+  esac
+}
+
+# The CLI has no pane focus-by-id command, but the socket API does (pane.focus).
+focus_pane() {
+  local req
+  req="$(jq -cn --arg p "$1" '{id: "herdr-find", method: "pane.focus", params: {pane_id: $p}}')"
+  printf '%s\n' "$req" | nc -U -w1 "${HERDR_SOCKET_PATH:-$HOME/.config/herdr/herdr.sock}" >/dev/null
+}
+
+case "${1:-all}" in
+  __list) list "${2:-all}"; exit ;;
+  __preview) preview "$2" "$3"; exit ;;
+  all|workspace|tab|pane) kind="${1:-all}" ;;
+  *) echo "usage: herdr-find [all|workspace|tab|pane]" >&2; exit 2 ;;
+esac
+
+choice="$(list "$kind" | fzf --ansi --delimiter='\t' --with-nth=3 --no-sort --tiebreak=index \
+  --prompt="herdr> " --header="ctrl-a all · ctrl-w workspaces · ctrl-t tabs · ctrl-p panes" \
+  --preview="'$self' __preview {1} {2}" --preview-window='right,55%,follow' \
+  --bind="ctrl-a:reload('$self' __list all)" \
+  --bind="ctrl-w:reload('$self' __list workspace)" \
+  --bind="ctrl-t:reload('$self' __list tab)" \
+  --bind="ctrl-p:reload('$self' __list pane)")" || exit 0
+
+IFS=$'\t' read -r kind id _ <<<"$choice"
+case "$kind" in
+  workspace) herdr workspace focus "$id" >/dev/null ;;
+  tab) herdr tab focus "$id" >/dev/null ;;
+  pane) focus_pane "$id" ;;
+esac
