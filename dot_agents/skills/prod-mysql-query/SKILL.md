@@ -177,6 +177,22 @@ Then retry the exec command.
    aws eks update-kubeconfig --name aws-prod-eucentral1-glob01-blue --region eu-central-1 --profile production --alias aws-production-blue
    ```
 
+3. **Still unauthorized right after a successful SSO login**
+   (`the server has asked for the client to provide credentials`, while
+   `aws sts get-caller-identity --profile production` works): static
+   `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` in the shell (e.g. loaded by
+   direnv in the repo) take precedence over the kubeconfig's
+   `AWS_PROFILE=production`, so `aws eks get-token` signs with the wrong
+   identity. Check with `env | grep '^AWS_ACCESS_KEY_ID'`, then unset them in
+   the same Bash call as every `kubectl` command (shell state does not persist
+   between calls):
+   ```bash
+   unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+   kubectl --context aws-production-blue -n factorial-backend exec mysql-enric-lluelles -- ...
+   ```
+   In zsh, don't put `env -u ... kubectl ...` in a variable and run `$K`: zsh
+   does not word-split it and fails with `command not found`.
+
 ### `aks-production` / `aks-demo` (Azure AD via kubelogin)
 
 These contexts authenticate with `kubelogin get-token --login azurecli`, so they
