@@ -1,6 +1,27 @@
 {
   "includeCoAuthoredBy": false,
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
   "model": "opus",
+  "enabledMcpjsonServers": [
+    "f0-storybook",
+    "factorial-docs"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "feature-dev@claude-plugins-official": true
   },
@@ -11,14 +32,6 @@
     "mode": "hold"
   },
   "skipDangerousModePermissionPrompt": true,
-  "permissions": {
-    "defaultMode": "bypassPermissions"
-  },
   "theme": "auto",
-  "voiceEnabled": true,
-  "hooks": {"SessionStart":[{"matcher":"^(startup|resume|clear|compact|fork)$","hooks":[{"type":"command","command":"bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session","timeout":10}]}]},
-  "enabledMcpjsonServers": [
-    "f0-storybook",
-    "factorial-docs"
-  ]
+  "voiceEnabled": true
 }

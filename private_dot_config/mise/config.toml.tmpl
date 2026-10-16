@@ -26,7 +26,7 @@ antigravity-cli = "latest"
 herdr = "latest"
 # Claude Code CLI, unified across hosts via mise (aqua registry); the macOS
 # desktop app still comes from the `claude` brew cask.
-claude = "2.1.289"
+claude = "2.1.301"
 # pi coding agent (aqua registry, cross-platform builds).
 pi = "latest"
 # OpenAI Codex CLI (aqua registry, cross-platform builds).
@@ -38,6 +38,7 @@ codex = "latest"
 gh = "latest"
 {{- if eq .chezmoi.os "darwin" }}
 node = "latest"
+"npm:pagerduty-cli" = "0.1.18"
 {{- else }}
 # Linux (Omarchy): these CLIs are provisioned through mise on this host.
 # node stays pinned to what Omarchy installed.
