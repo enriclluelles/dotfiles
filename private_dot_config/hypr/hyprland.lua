@@ -54,3 +54,7 @@ o.window({ class = "^dev\\.enric\\.sudo-askpass$" }, {
   tag = "-default-opacity",
   opacity = "1 1",
 })
+
+-- Steam games (Proton windows are steam_app_<id>): no screensaver/lock while running.
+-- Omarchy's stock rule only covers the Steam client, and only when fullscreen.
+o.window({ class = "^steam_app_.*$" }, { idle_inhibit = "always" })
