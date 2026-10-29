@@ -22,3 +22,21 @@ prompt once. Sending prompts to several agents at once makes this more likely.
 - Split into a grid: `herdr pane split <pane> --direction right|down --cwd <dir> --no-focus`; the new id is `.result.pane.pane_id`.
 - Run commands with `&` + `wait` in bash to start, prompt, or wait on several agents in parallel.
 - `herdr agent wait <name> --until idle --until done --until blocked --timeout <ms>` waits for an agent that is already working.
+
+## Focus follows the request
+
+When the user says to do something *in* a herdr workspace, worktree, tab or pane ("in w2Z", "in the
+one-workflows worktree", "in that tab"), bring that place into view by default, before or right after
+acting there. Only skip it when they say not to ("without switching", "in the background", "keep me here")
+or when the work is a pure background read. This overrides the generic "use `--no-focus`" rule in the
+generated skill.
+
+- Workspace: `herdr workspace focus <wN>` (use the id from `herdr workspace list`, not the label).
+- Tab: `herdr tab focus <wN:tM>`.
+- Pane: `herdr pane focus --direction <left|right|up|down> --pane <id>`; it is relative, so focus the
+  workspace or tab first and read `herdr pane layout` to pick the direction.
+- Creating things there: drop `--no-focus` from `workspace create`, `worktree create`, `pane split`,
+  so the new place is focused at once.
+
+Focus moves only the user's view. This agent still runs in its own worktree; execute the work through
+`herdr pane run` / `send-text` / `agent prompt` in the target pane, or hand it to an agent there.

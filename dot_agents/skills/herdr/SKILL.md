@@ -203,4 +203,4 @@ After that failed read, ask the agent to write its complete response as Markdown
 
 ## Local notes
 
-Before orchestrating agents, read [local-notes.md](local-notes.md) for lessons learned in practice.
+Before orchestrating agents, read [local-notes.md](local-notes.md) for lessons learned in practice. Its "Focus follows the request" section overrides the `--no-focus` default above: when the user names a workspace, worktree, tab or pane as the place to work, focus it unless they ask not to.
