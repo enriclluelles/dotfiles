@@ -22,6 +22,9 @@ install.sh
 .config/hypr
 # sudo askpass popup depends on ghostty + Hyprland float rule.
 .local/bin/sudo-askpass
+# Sunshine display guard: Hyprland/Omarchy + KMS streaming host only.
+.local/bin/sunshine-display-guard
+.config/systemd/user/sunshine-display-guard.service
 {{- end }}
 
 {{- if ne .chezmoi.os "darwin" }}

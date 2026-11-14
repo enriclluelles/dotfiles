@@ -1,0 +1,12 @@
+[Unit]
+Description=Wake the display for Sunshine (KMS capture needs a lit monitor)
+After=graphical-session.target app-dev.lizardbyte.app.Sunshine.service
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/sunshine-display-guard
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

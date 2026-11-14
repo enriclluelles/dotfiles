@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# Keep the display lit for Sunshine.
+#
+# Sunshine captures through KMS, which only sees a monitor whose CRTC is active.
+# The Omarchy lock screen powers the display off (DPMS) 5s after locking, so a
+# Moonlight connection to an idle box fails with "Couldn't find monitor [0]" /
+# "Unable to find display or encoder during startup". prep-cmd can't help: Sunshine
+# probes the encoder before it runs any prep command.
+#
+# This follows Sunshine's journal (min_log_level = debug, so requests and frames are
+# logged) and:
+#   - wakes the display when Moonlight opens the host (/applist) or starts a stream
+#     (/launch, /resume). That is before the encoder probe, so NVENC finds the monitor.
+#     Encoder-probe lines remain a fallback. /serverinfo is ignored on purpose: Moonlight
+#     polls it while the host list is open, which would flash the display repeatedly,
+#   - while a stream is live, holds Omarchy's stay-awake and re-wakes the display if
+#     the lock screen blanks it again,
+#   - releases the hold once no frame has been captured for $IDLE_AFTER seconds.
+#
+# Why frames and not "CLIENT DISCONNECTED": Sunshine doesn't log a disconnect when a
+# client just vanishes (Mac sleeps, network drops; it logs "Ping Timeout" instead), and
+# with two overlapping sessions the first disconnect isn't the end of streaming. On
+# 2026-11-09 a missed disconnect left stay-awake on for four days. The per-frame debug
+# line ("width and height: ...") is emitted only while something is being streamed.
+#
+# Stay-awake persists across reboots, so ownership is recorded in $MARKER: if the
+# guard dies mid-session (SIGKILL, crash, power loss), the next start hands idle back.
+set -uo pipefail
+
+UNIT=app-dev.lizardbyte.app.Sunshine.service
+IDLE_AFTER=15   # seconds without a captured frame before the session counts as over
+STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/sunshine-display-guard
+MARKER=$STATE_DIR/owns-stay-awake
+
+keeper=""
+last_frame=0
+
+log() { echo "sunshine-display-guard: $*"; }
+
+wake() {
+  # Skips the dispatch when every display is already lit (avoids a modeset flash).
+  omarchy-brightness-display on
+}
+
+stay_awake() { omarchy-shell idle status 2>/dev/null | jq -r .stayAwake; }
+
+release_idle() {
+  # Give idle back only if we took it; never undo a stay-awake the user set.
+  [[ -e $MARKER ]] || return 0
+  if omarchy-shell idle enable >/dev/null; then
+    rm -f "$MARKER"
+  else
+    log "could not re-enable idle; will retry"
+  fi
+}
+
+start_session() {
+  last_frame=$EPOCHSECONDS
+  [[ -n $keeper ]] && return
+  if [[ $(stay_awake) == false ]]; then
+    mkdir -p "$STATE_DIR"
+    : > "$MARKER"
+    omarchy-shell idle disable >/dev/null
+  fi
+  wake
+  ( while true; do wake; sleep 1; done ) &
+  keeper=$!
+  log "stream live ($1): holding display on"
+}
+
+end_session() {
+  [[ -n $keeper ]] || return
+  kill "$keeper" 2>/dev/null
+  keeper=""
+  release_idle
+  log "stream ended ($1): idle restored"
+}
+
+trap 'end_session "guard stopping"; exit 0' TERM INT
+
+# Recover from a previous run that died while holding stay-awake. If a stream is
+# still live, the next frame line takes the hold again within a second.
+if [[ -e $MARKER ]]; then
+  log "stale stay-awake hold from a previous run: releasing"
+  release_idle
+fi
+
+while true; do
+  if IFS= read -r -t 5 line; then
+    case $line in
+      *"width and height:"*) [[ -n $keeper ]] && last_frame=$EPOCHSECONDS || start_session "frames" ;;
+      *"CLIENT CONNECTED"*) start_session "client connected" ;;
+      *"DESTINATION :: /applist"*|*"DESTINATION :: /launch"*|*"DESTINATION :: /resume"*) wake ;;
+      *"Trying encoder"*|*"Couldn't find monitor"*) wake ;;
+    esac
+  elif (( $? <= 128 )); then
+    # EOF: journalctl went away. Fail so systemd restarts us (Restart=on-failure).
+    end_session "journal closed"
+    exit 1
+  fi
+  if [[ -n $keeper ]] && (( EPOCHSECONDS - last_frame > IDLE_AFTER )); then
+    end_session "no frames for ${IDLE_AFTER}s"
+  fi
+done < <(journalctl --user -u "$UNIT" -f -n 0 -o cat)
