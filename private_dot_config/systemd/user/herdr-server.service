@@ -1,0 +1,18 @@
+[Unit]
+Description=herdr headless server (agent multiplexer)
+# Start inside the graphical session so panes inherit WAYLAND_DISPLAY etc.
+# sddm autologs in at boot, so this comes up without anyone at the desk.
+After=graphical-session.target
+
+[Service]
+# Login shell so panes get the same PATH/env (mise, zshenv) as an interactive start.
+ExecStart=/usr/bin/zsh -lc 'exec herdr server'
+ExecStop=/usr/bin/zsh -lc 'herdr server stop'
+# herdr-upgrade does a live handoff to a new server process and the old one exits;
+# don't let systemd kill the new server when the original main PID goes away.
+KillMode=process
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

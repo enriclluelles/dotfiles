@@ -25,6 +25,8 @@ install.sh
 # Sunshine display guard: Hyprland/Omarchy + KMS streaming host only.
 .local/bin/sunshine-display-guard
 .config/systemd/user/sunshine-display-guard.service
+# herdr headless server started at login via systemd (macOS uses launchd, if anything).
+.config/systemd/user/herdr-server.service
 {{- end }}
 
 {{- if ne .chezmoi.os "darwin" }}
