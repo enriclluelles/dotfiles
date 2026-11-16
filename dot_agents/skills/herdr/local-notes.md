@@ -16,6 +16,14 @@ prompt once. Sending prompts to several agents at once makes this more likely.
 - The prompt text itself contains the markers, so take the *second* match:
   `awk '/BRIEF-START/{c++} c==2' | sed -n '/BRIEF-START/,/BRIEF-END/p'`.
 
+## Removing worktrees
+
+Use `herdr worktree remove --workspace <id> [--force]` — it closes the panes/workspace and
+removes the checkout in one step. Do NOT close the panes first: the workspace auto-closes
+when its last pane closes, and then `worktree remove` fails with `workspace_not_found`,
+leaving the git checkout to clean up manually. Harvest any generated outputs (work/ dirs,
+reports) before removing; `--force` is needed when untracked files exist.
+
 ## Fan-out pattern
 
 - Create a workspace: `herdr workspace create --cwd <dir> --label <name> --no-focus`; the root pane is `.result.root_pane.pane_id`.
