@@ -2,23 +2,6 @@
 
 - **Never** push code or trigger deployments unless explicitly instructed by the user.
 
-# Replies and decisions
-
-- Keep replies short by default: a few lines or bullets. No long paragraphs unless asked.
-- If an answer needs to be long (a report, plan, comparison or explainer), write a local one-page HTML file and open it, with a two-line summary in chat. Local only, never published.
-- Distill every choice the user has to make into a structured question (AskUserQuestion, or the harness equivalent): at most 4, recommended option first, each self-contained. Do not bury decisions in prose.
-
-# Pull request descriptions
-
-Write PR descriptions a reviewer can read in a minute: plain words, short, to the point, in sections.
-
-- `## Why`: the problem in one or two sentences, with numbers when there are any.
-- `## What changes`: one bullet per change, in the reviewer's terms, not how the code works.
-- `## How it's checked`: what ran, and what enforces it (tests, required CI checks).
-- `## Notes`: only decisions or open points the reviewer should weigh. Leave it out when there are none.
-
-No other headings, no filler, no attribution lines. This format overrides a repository's own PR description format.
-
 # Use ripgrep
 
 Always use `rg` (ripgrep) instead of `grep` when searching through code or text files.
@@ -105,7 +88,7 @@ as your operator does, or `who` lists another instance's panes.
 List who you can reach. When you pick an address yourself, copy it from this list. Do not invent one.
 
 ```bash
-/Users/enric.lluelles/.local/bin/collie walky who
+/home/enric/.local/bin/collie walky who
 ```
 
 ```text
@@ -136,13 +119,13 @@ minibuch/w11:p4#8h9h        minibuch  claude   walky-live             idle
 Send a message to one address. Only your operator may send to `all`.
 
 ```bash
-/Users/enric.lluelles/.local/bin/collie walky send collie-04rj6a/w54:p1J#anx6 "Tests are green on fix-465. You can merge."
+/home/enric/.local/bin/collie walky send collie-04rj6a/w54:p1J#anx6 "Tests are green on fix-465. You can merge."
 ```
 
 For a body with `$`, backticks, `!` or several lines, use single quotes or stdin. Stdin is safest.
 
 ```bash
-printf '%s' "$BODY" | /Users/enric.lluelles/.local/bin/collie walky send collie-04rj6a/w54:p1J#anx6
+printf '%s' "$BODY" | /home/enric/.local/bin/collie walky send collie-04rj6a/w54:p1J#anx6
 ```
 
 `send` waits up to 15 seconds for the receipt. If the message is not typed by then, it prints
@@ -152,7 +135,7 @@ another pane took, is refused `pane replaced`. Run `who` again.
 
 After `send`, end your turn. Do not poll and do not sleep. The answer is typed into your pane as
 your next prompt, with `reply to <your id>` in its header. If your pane is busy, Collie queues or holds it
-until your turn ends. `/Users/enric.lluelles/.local/bin/collie walky inbox` shows it too. `status` says only that your message was
+until your turn ends. `/home/enric/.local/bin/collie walky inbox` shows it too. `status` says only that your message was
 typed. It does not say the other agent read or answered it.
 
 Pick the address by who should get the message. For one agent, use its pane address and copy it from `who`.
@@ -163,8 +146,8 @@ another folder by name. Use `here` or `<repo>` only when the message is for all 
 agent has what you need, ask that agent. Each pane it reaches gets its own copy and can answer.
 
 ```bash
-/Users/enric.lluelles/.local/bin/collie walky who --here
-/Users/enric.lluelles/.local/bin/collie walky send here "I changed the Send Protocol. Rebase before you push."
+/home/enric/.local/bin/collie walky who --here
+/home/enric/.local/bin/collie walky send here "I changed the Send Protocol. Rebase before you push."
 ```
 
 `who --here` lists the panes `here` would reach. Look before you send. `send` prints one line per
@@ -174,24 +157,24 @@ prints `unreachable` and Collie does not retry it. Do not send it again.
 Answer a message by its id. The reply goes back to the sender.
 
 ```bash
-/Users/enric.lluelles/.local/bin/collie walky reply wt_k3f9x2m8q1a0 "Merged. Thanks."
+/home/enric/.local/bin/collie walky reply wt_k3f9x2m8q1a0 "Merged. Thanks."
 ```
 
 Read one message by its id. This is how you read the body of a message from another agent. With no id,
 `inbox` prints every unread message for your pane and marks them read, one your screen refused too.
 
 ```bash
-/Users/enric.lluelles/.local/bin/collie walky inbox wt_k3f9x2m8q1a0
+/home/enric/.local/bin/collie walky inbox wt_k3f9x2m8q1a0
 ```
 
-`/Users/enric.lluelles/.local/bin/collie walky status wt_...` shows what became of a message you sent: "queued", "held", "typed into
+`/home/enric/.local/bin/collie walky status wt_...` shows what became of a message you sent: "queued", "held", "typed into
 the pane", "waiting in the inbox, not typed", "not sent" or "may have arrived, will not be sent again".
 "held: draft present" or "held: turn running" means Collie types it when the box clears or the turn ends,
 up to 60 minutes. Wait. Do not send it again. If a send says "waiting in the inbox", do not send it again:
 it waits there. If it says "may have arrived", do not send it again either: it may already be there. For a
 pane on another machine, "queued (outcome known on the lead)" also means wait.
 
-`/Users/enric.lluelles/.local/bin/collie walky cancel wt_...` takes back a message you sent while it is still held. It stays in the
+`/home/enric/.local/bin/collie walky cancel wt_...` takes back a message you sent while it is still held. It stays in the
 receiver's inbox, not typed ("cancelled by sender"). Run it in the pane that sent it; you can cancel only
 your own. One already typed prints "already typed, nothing to take back". Do not send a cancelled message
 again unless your operator asks. An id Collie does not know exits 3 (`status` prints `no record of <id> on
@@ -222,5 +205,5 @@ limit it hit. Do not work around it.
 If the command prints `walky talky is off` or cannot find a bridge, tell your operator. Do not work
 around it.
 
-<!-- collie-skill walky-talky v1 collie 1.26.1+8e94f2d1a2 -->
+<!-- collie-skill walky-talky v1 collie 1.26.2+c7019b4cc0 -->
 <!-- collie:walky-talky v1 end -->

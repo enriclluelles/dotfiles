@@ -1,16 +1,15 @@
 {
-  "lastChangelogVersion": "1.1.0",
-  "defaultProvider": "github-copilot",
-  "defaultModel": "claude-opus-4.6",
+  "lastChangelogVersion": "1.5.2",
+  "defaultProvider": "deepinfra",
+  "defaultModel": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
   "enabledModels": [
-    "github-copilot/claude-opus-4.6",
-    "github-copilot/claude-haiku-4.5",
-    "github-copilot/gemini-3.1-pro-preview",
-    "github-copilot/gemini-3-flash-preview",
-    "github-copilot/gpt-5.1-codex-max"
+    "deepinfra/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+    "deepinfra/deepseek-ai/DeepSeek-V4.1-Flash",
+    "deepinfra/deepseek-ai/DeepSeek-V4-Flash-0731",
+    "deepinfra/deepseek-ai/DeepSeek-V4-Flash"
   ],
   "defaultThinkingLevel": "high",
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "lsp": {
     "hookMode": "edit_write"
   },
@@ -33,5 +32,8 @@
         "reserveTokens": 738860
       }
     }
+  },
+  "extensionChangelogVersions": {
+    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.88.1"
   }
 }
