@@ -26,7 +26,7 @@ antigravity-cli = "latest"
 herdr = "latest"
 # Claude Code CLI, unified across hosts via mise (aqua registry); the macOS
 # desktop app still comes from the `claude` brew cask.
-claude = "2.1.318"
+claude = "latest"
 # pi coding agent (aqua registry, cross-platform builds).
 pi = "latest"
 # OpenAI Codex CLI (aqua registry, cross-platform builds).
@@ -38,7 +38,6 @@ codex = "latest"
 gh = "latest"
 {{- if eq .chezmoi.os "darwin" }}
 node = "latest"
-"npm:pagerduty-cli" = "0.1.18"
 {{- else }}
 # Linux (Omarchy): these CLIs are provisioned through mise on this host.
 # node stays pinned to what Omarchy installed.
@@ -50,4 +49,10 @@ uv = "latest"
 # releases (attestations + SLSA provenance are verified on install).
 "github:sahil87/run-kit" = "latest"
 "github:sahil87/wt" = "latest"
+# muse: Meta's agent CLI, from their launcher script.
+"http:muse" = { version = "latest", url = "https://api.meta.ai/muse-launcher.sh", bin = "muse", version_list_url = "https://api.meta.ai/muse-code/channels/muse-stable", version_json_path = ".version" }
+# cursor-agent: Cursor's CLI agent, from Cursor's own download page.
+cursor-agent = { version = "latest", bin_path = "bin", strip_components = "0", url = 'https://downloads.cursor.com/lab/{{ "{{" }} version {{ "}}" }}/{{ "{{" }} os(macos="darwin") {{ "}}" }}/{{ "{{" }} arch(arm64="arm64", x64="x64") {{ "}}" }}/agent-cli-package.tar.gz', version_date_expr = 'map(versions, { [#, replace(#[:10], ".", "-")] })', version_list_url = "https://cursor.com/install", version_regex = 'downloads\.cursor\.com/lab/([0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9a-f]+)/', postinstall = 'mkdir -p "$MISE_TOOL_INSTALL_PATH/bin" && ln -sfn ../dist-package/cursor-agent "$MISE_TOOL_INSTALL_PATH/bin/cursor-agent"' }
+# goose: Block's local agent CLI (aqua registry).
+"aqua:aaif-goose/goose" = "1.59.2"
 {{- end }}
