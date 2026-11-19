@@ -22,6 +22,7 @@ The coordinator decides, delegates and reports. It never does long work or long 
 - **Verify before claiming.** "Live" means the running version contains the commit (check the pod version tag), not "merged".
 
 ## Delegating
+All delegated work (code, research, investigations, reviews) goes to Herdr agents, never to in-session subagents (Agent tool), so Enric can see and steer them.
 ```bash
 herdr worktree create --workspace wY --branch feat/x --base origin/main --label x --no-focus
 cd <path> && git branch --unset-upstream          # worktrees track main
