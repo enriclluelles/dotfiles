@@ -158,6 +158,20 @@ herdr agent read reviewer --source recent-unwrapped --lines 120
 
 If a wait fails or returns `blocked`, inspect `agent get` and `agent read` before deciding what input to send. A timeout or stalled response does not prove the prompt was never delivered; do not blindly submit it again. Use the pane surface only when raw terminal control is intentional.
 
+## Create worktrees with Herdr
+
+Inside Herdr, every new worktree is created through `herdr worktree`, never with `git worktree add` or an agent's own worktree flag. Herdr makes the checkout and opens it as a workspace with a root pane, so the branch is reachable as a pane and the same tool that created it removes it. Pass the rule on when delegating: a child agent told to start isolated work must use `herdr worktree create`, not a bare git worktree.
+
+```bash
+herdr worktree list --cwd "$PWD"
+herdr worktree create --cwd "$PWD" --branch fix-465 --base main --label fix-465 --no-focus
+herdr worktree open --cwd "$PWD" --branch fix-465 --no-focus
+```
+
+Read the new workspace and root pane from the creation response. Use `--focus` only when the user asked to switch context. `--trust-repository` follows the usual rule: only after the user has verified the repository.
+
+Remove a worktree with `herdr worktree remove --workspace <id>`; do not close its panes first, or the workspace auto-closes and the checkout is left behind. See [local-notes.md](local-notes.md).
+
 ## Run an ordinary command in another pane
 
 Create a sibling pane with the same geometry rule, preserve the caller's working directory, and keep user focus unchanged:
