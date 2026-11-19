@@ -1,0 +1,860 @@
+#!/usr/bin/env python3
+"""coord: deterministic state collection for the One coordinator workflow.
+
+Tracks PRs, Herdr agents and free-form items, snapshots their state to JSON and
+prints only what changed between the last two snapshots, so the coordinating
+agent reasons about changes instead of re-reading everything.
+
+  coord add pr <owner/repo> <number> [--note TEXT]
+  coord add agent <name|pane_id> [--note TEXT]
+  coord add item <title> [--owner WHO] [--next STEP]
+  coord edit <id> [--note|--owner|--next TEXT]
+  coord rm <id>
+  coord ls [--json]
+  coord snapshot
+  coord diff [--json] [--since 30m|2h|ISO]
+  coord sweep [--json] [--no-snapshot]
+  coord watch [--install | --uninstall | --status]
+
+Files: items in ~/.config/coord/items.yaml, snapshots in
+~/.local/state/coord/{latest,previous}.json, 24h of history in
+~/.local/state/coord/history/, last sweep base in sweep.json. Only stdlib; calls gh and herdr.
+"""
+from __future__ import annotations
+
+import argparse
+import concurrent.futures as cf
+import datetime as dt
+import fcntl
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+CONFIG_DIR = Path(os.environ.get("COORD_CONFIG_DIR", HOME / ".config" / "coord"))
+STATE_DIR = Path(os.environ.get("COORD_STATE_DIR", HOME / ".local" / "state" / "coord"))
+ITEMS_FILE = CONFIG_DIR / "items.yaml"
+LATEST = STATE_DIR / "latest.json"
+PREVIOUS = STATE_DIR / "previous.json"
+LOG_FILE = STATE_DIR / "watch.log"
+HISTORY_DIR = STATE_DIR / "history"  # one file per snapshot, pruned after HISTORY_HOURS
+HISTORY_HOURS = 24
+SWEEP_BASE = STATE_DIR / "sweep.json"  # copy of the snapshot the last `coord sweep` ended at
+LAUNCHD_LABEL = "local.coord.watch"
+PLIST_SRC = CONFIG_DIR / f"{LAUNCHD_LABEL}.plist"  # placed by chezmoi
+PLIST_DST = HOME / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
+AGENT_LINES = 30
+SCHEMA = 1
+
+
+def die(msg: str) -> None:
+    print(f"coord: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def now_iso() -> str:
+    return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
+
+
+# --------------------------------------------------------------------------
+# items.yaml: a tiny YAML subset (list of flat mappings) so we need no PyYAML.
+# Values are written as JSON scalars, which are valid YAML.
+
+ITEM_FIELDS = ["id", "kind", "repo", "number", "agent", "title", "owner", "next", "note", "added"]
+
+
+def _yaml_scalar(raw: str):
+    raw = raw.strip()
+    if raw == "" or raw in ("~", "null"):
+        return None
+    if raw[0] == '"':
+        return json.loads(raw)
+    if raw[0] == "'" and raw.endswith("'"):
+        return raw[1:-1].replace("''", "'")
+    if re.fullmatch(r"-?\d+", raw):
+        return int(raw)
+    return raw.split(" #", 1)[0].rstrip()
+
+
+def load_items() -> list[dict]:
+    if not ITEMS_FILE.exists():
+        return []
+    items: list[dict] = []
+    cur: dict | None = None
+    for n, line in enumerate(ITEMS_FILE.read_text().splitlines(), 1):
+        s = line.strip()
+        if not s or s.startswith("#") or s in ("items:", "items: []"):
+            continue
+        if s.startswith("- "):
+            cur = {}
+            items.append(cur)
+            s = s[2:].strip()
+        m = re.match(r"^([A-Za-z_][\w-]*):\s?(.*)$", s)
+        if not m or cur is None:
+            die(f"{ITEMS_FILE}:{n}: cannot parse line: {line!r}")
+        cur[m.group(1)] = _yaml_scalar(m.group(2))
+    return items
+
+
+def save_items(items: list[dict]) -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    out = ["# coord tracked items. Managed by `coord add/edit/rm`; hand edits are fine.", "items:"]
+    if not items:
+        out[-1] = "items: []"
+    for it in items:
+        keys = [k for k in ITEM_FIELDS if it.get(k) not in (None, "")]
+        keys += [k for k in it if k not in ITEM_FIELDS and it[k] not in (None, "")]
+        for i, k in enumerate(keys):
+            prefix = "  - " if i == 0 else "    "
+            out.append(f"{prefix}{k}: {json.dumps(it[k], ensure_ascii=False)}")
+    tmp = ITEMS_FILE.with_suffix(".tmp")
+    tmp.write_text("\n".join(out) + "\n")
+    tmp.replace(ITEMS_FILE)
+
+
+def find_item(items: list[dict], ref: str) -> dict:
+    exact = [i for i in items if i["id"] == ref]
+    if exact:
+        return exact[0]
+    loose = [i for i in items if i["id"].endswith(ref) or i["id"].split(":", 1)[-1] == ref]
+    if len(loose) == 1:
+        return loose[0]
+    if not loose:
+        die(f"no tracked item matches {ref!r} (see `coord ls`)")
+    die(f"{ref!r} is ambiguous: " + ", ".join(i["id"] for i in loose))
+    raise AssertionError
+
+
+def slug(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:40] or "item"
+
+
+# --------------------------------------------------------------------------
+# External commands
+
+
+def run(cmd: list[str], timeout: int = 60) -> str:
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError:
+        raise RuntimeError(f"{cmd[0]} not found on PATH")
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"{cmd[0]} timed out after {timeout}s")
+    if p.returncode != 0:
+        # First stderr line only: enough to diagnose, never dumps env or tokens.
+        err = (p.stderr.strip().splitlines() or ["exit %d" % p.returncode])[0]
+        raise RuntimeError(f"{cmd[0]} {cmd[1] if len(cmd) > 1 else ''}: {err[:200]}")
+    return p.stdout
+
+
+PR_QUERY = """
+query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){
+ number title url state merged mergedAt isDraft mergeStateStatus reviewDecision
+ author{login}
+ mergeQueueEntry{position state enqueuedAt}
+ latestReviews(first:50){nodes{author{login} state submittedAt}}
+ comments(last:100){nodes{databaseId author{login} createdAt body}}
+ timelineItems(last:3,itemTypes:[REMOVED_FROM_MERGE_QUEUE_EVENT]){nodes{... on RemovedFromMergeQueueEvent{createdAt reason}}}
+ commits(last:1){nodes{commit{oid statusCheckRollup{state contexts(first:100){pageInfo{hasNextPage endCursor} nodes{
+   __typename ... on CheckRun{name status conclusion} ... on StatusContext{context state}}}}}}}
+}}}
+"""
+
+CONTEXTS_QUERY = """
+query($owner:String!,$name:String!,$number:Int!,$after:String!){repository(owner:$owner,name:$name){pullRequest(number:$number){
+ commits(last:1){nodes{commit{statusCheckRollup{contexts(first:100,after:$after){pageInfo{hasNextPage endCursor} nodes{
+   __typename ... on CheckRun{name status conclusion} ... on StatusContext{context state}}}}}}}
+}}}
+"""
+
+FAILED = {"FAILURE", "TIMED_OUT", "CANCELLED", "ACTION_REQUIRED", "STARTUP_FAILURE", "ERROR"}
+DIGGER_RE = re.compile(r"^\s*digger\s+(apply|plan)\b(.*)$", re.I)
+
+
+def gh_graphql(query: str, **vars) -> dict:
+    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
+    for k, v in vars.items():
+        cmd += ["-F" if isinstance(v, int) else "-f", f"{k}={v}"]
+    data = json.loads(run(cmd))
+    if data.get("errors"):
+        raise RuntimeError("graphql: " + data["errors"][0].get("message", "error")[:200])
+    return data["data"]
+
+
+def first_line(body: str) -> str:
+    body = re.sub(r"<!--.*?-->", "", body or "", flags=re.S)
+    for line in body.splitlines():
+        line = re.sub(r"^[#>\s]+", "", line).strip()
+        if line:
+            return line[:140]
+    return ""
+
+
+def fetch_pr(repo: str, number: int) -> dict:
+    owner, name = repo.split("/", 1)
+    pr = gh_graphql(PR_QUERY, owner=owner, name=name, number=number)["repository"]["pullRequest"]
+    if pr is None:
+        raise RuntimeError("PR not found")
+    commit = (pr["commits"]["nodes"] or [{"commit": {}}])[0]["commit"]
+    rollup = commit.get("statusCheckRollup") or {}
+    ctx = (rollup.get("contexts") or {"nodes": [], "pageInfo": {"hasNextPage": False}})
+    nodes = list(ctx["nodes"])
+    page = ctx["pageInfo"]
+    while page.get("hasNextPage"):
+        more = gh_graphql(CONTEXTS_QUERY, owner=owner, name=name, number=number, after=page["endCursor"])
+        c = more["repository"]["pullRequest"]["commits"]["nodes"][0]["commit"]["statusCheckRollup"]["contexts"]
+        nodes += c["nodes"]
+        page = c["pageInfo"]
+
+    failing, pending, total = [], [], 0
+    for n in nodes:
+        total += 1
+        if n["__typename"] == "CheckRun":
+            if n["status"] != "COMPLETED":
+                pending.append(n["name"])
+            elif n["conclusion"] in FAILED:
+                failing.append(n["name"])
+        else:
+            if n["state"] in ("PENDING", "EXPECTED"):
+                pending.append(n["context"])
+            elif n["state"] in FAILED:
+                failing.append(n["context"])
+
+    comments, digger = [], []
+    for c in pr["comments"]["nodes"]:
+        author = (c.get("author") or {}).get("login") or "ghost"
+        line = first_line(c["body"])
+        comments.append({"id": c["databaseId"], "author": author, "at": c["createdAt"], "line": line})
+        m = DIGGER_RE.match(line)
+        if m:
+            args = m.group(2).strip()
+            digger.append({
+                "id": c["databaseId"], "author": author, "at": c["createdAt"],
+                "command": f"digger {m.group(1).lower()} {args}".strip(),
+                "verb": m.group(1).lower(),
+                "plain": m.group(1).lower() == "apply" and not re.search(r"(^|\s)(-p|--project)\b", args),
+            })
+
+    removed = [n for n in pr["timelineItems"]["nodes"] if n]
+    mq = pr.get("mergeQueueEntry")
+    return {
+        "title": pr["title"], "url": pr["url"], "author": (pr.get("author") or {}).get("login"),
+        "state": pr["state"], "merged": pr["merged"], "mergedAt": pr["mergedAt"], "isDraft": pr["isDraft"],
+        "mergeStateStatus": pr["mergeStateStatus"], "reviewDecision": pr["reviewDecision"],
+        "headSha": commit.get("oid"),
+        "ci": {
+            "state": rollup.get("state") or "NONE",
+            "total": total, "failing": sorted(set(failing)), "pending": sorted(set(pending)),
+        },
+        "reviews": sorted(
+            [{"author": (r.get("author") or {}).get("login") or "ghost", "state": r["state"], "at": r["submittedAt"]}
+             for r in pr["latestReviews"]["nodes"]], key=lambda r: r["author"]),
+        "mergeQueue": {"position": mq["position"], "state": mq["state"], "enqueuedAt": mq["enqueuedAt"]} if mq else None,
+        "lastRemovedFromQueue": removed[-1] if removed else None,
+        "comments": comments,
+        "digger": digger,
+    }
+
+
+SPINNER_RE = re.compile(r"…\s*\(.*\)|esc to interrupt|^\s*[✻✶✳✢✽·*]\s+\S+…")
+
+
+def output_hash(text: str) -> str:
+    """Hash of visible lines, ignoring spinners, timers and token counters."""
+    lines = []
+    for line in text.splitlines():
+        if SPINNER_RE.search(line):
+            continue
+        line = re.sub(r"\d+", "#", line).rstrip()
+        if line:
+            lines.append(line)
+    return hashlib.sha256("\n".join(lines).encode()).hexdigest()[:16]
+
+
+def fetch_agents(tracked: list[dict]) -> dict:
+    agents = json.loads(run(["herdr", "agent", "list"]))["result"]["agents"]
+    try:
+        ws = json.loads(run(["herdr", "workspace", "list"]))["result"]["workspaces"]
+        labels = {w["workspace_id"]: w["label"] for w in ws}
+    except Exception:
+        labels = {}
+    tracked_refs = {t.get("agent") for t in tracked}
+
+    def read(pane: str) -> str | None:
+        try:
+            return output_hash(run(["herdr", "pane", "read", pane, "--source", "visible",
+                                    "--lines", str(AGENT_LINES), "--format", "text"], timeout=15))
+        except RuntimeError:
+            return None
+
+    with cf.ThreadPoolExecutor(8) as ex:
+        hashes = dict(zip([a["pane_id"] for a in agents], ex.map(read, [a["pane_id"] for a in agents])))
+    out = {}
+    for a in agents:
+        pane = a["pane_id"]
+        out[pane] = {
+            "name": a.get("name"), "pane": pane, "agent": a.get("agent"),
+            "workspace": labels.get(a["workspace_id"], a["workspace_id"]),
+            "title": a.get("terminal_title_stripped") or "",
+            "status": a.get("agent_status"),
+            "outputHash": hashes.get(pane),
+            "tracked": bool({a.get("name"), pane} & tracked_refs),
+        }
+    return out
+
+
+# --------------------------------------------------------------------------
+# Snapshot
+
+
+def load_json(path: Path) -> dict | None:
+    try:
+        return json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def take_snapshot() -> dict:
+    items = load_items()
+    prev = load_json(LATEST) or {}
+    prev_prs = prev.get("prs", {})
+    prs_items = [i for i in items if i["kind"] == "pr"]
+
+    def one(it):
+        try:
+            return it["id"], fetch_pr(it["repo"], int(it["number"]))
+        except Exception as e:  # keep last good data so the next diff stays meaningful
+            old = dict(prev_prs.get(it["id"]) or {})
+            old.update({"error": str(e)[:200], "stale": True})
+            return it["id"], old
+
+    with cf.ThreadPoolExecutor(6) as ex:
+        prs = dict(ex.map(one, prs_items))
+    for it in prs_items:
+        prs[it["id"]].update({"repo": it["repo"], "number": int(it["number"]), "note": it.get("note")})
+
+    agents_err = None
+    try:
+        agents = fetch_agents([i for i in items if i["kind"] == "agent"])
+    except Exception as e:
+        agents_err = str(e)[:200]
+        agents = {k: dict(v, stale=True) for k, v in prev.get("agents", {}).items()}
+    snap = {
+        "schema": SCHEMA, "takenAt": now_iso(),
+        "prs": prs, "agents": agents, "agentsError": agents_err,
+        "missingTrackedAgents": sorted(
+            i["agent"] for i in items if i["kind"] == "agent"
+            and not any(i["agent"] in (a.get("name"), a["pane"]) for a in agents.values())),
+        "items": [i for i in items if i["kind"] == "item"],
+    }
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    if LATEST.exists():
+        LATEST.replace(PREVIOUS)
+    write_json(LATEST, snap)
+    write_json(HISTORY_DIR / f"{snap['takenAt'][:19].replace(':', '')}.json", snap)
+    prune_history()
+    return snap
+
+
+def write_json(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n")
+    tmp.replace(path)
+
+
+def parse_time(s: str) -> dt.datetime:
+    """'90m', '2h', '1d' (ago) or an ISO time; naive times are local."""
+    m = re.fullmatch(r"(\d+)\s*([mhd])", s.strip())
+    if m:
+        unit = {"m": "minutes", "h": "hours", "d": "days"}[m.group(2)]
+        return dt.datetime.now(dt.timezone.utc) - dt.timedelta(**{unit: int(m.group(1))})
+    try:
+        t = dt.datetime.fromisoformat(s.strip().replace("Z", "+00:00"))
+    except ValueError:
+        die(f"bad time {s!r}: use e.g. 30m, 2h, 1d or 2026-11-17T10:00")
+    return t if t.tzinfo else t.astimezone()
+
+
+def snap_time(snap: dict) -> dt.datetime:
+    return dt.datetime.fromisoformat(snap["takenAt"])
+
+
+def history() -> list[Path]:
+    return sorted(HISTORY_DIR.glob("*.json"))  # names sort chronologically
+
+
+def prune_history() -> None:
+    cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=HISTORY_HOURS)
+    for p in history():
+        try:
+            t = dt.datetime.strptime(p.stem, "%Y-%m-%dT%H%M%S").replace(tzinfo=dt.timezone.utc)
+        except ValueError:
+            continue
+        if t < cutoff:
+            p.unlink(missing_ok=True)
+
+
+class Lock:
+    def __enter__(self):
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        self.f = open(STATE_DIR / ".lock", "w")
+        fcntl.flock(self.f, fcntl.LOCK_EX)
+
+    def __exit__(self, *a):
+        fcntl.flock(self.f, fcntl.LOCK_UN)
+        self.f.close()
+
+
+# --------------------------------------------------------------------------
+# Diff
+
+CI_COLOR = {"SUCCESS": "green", "FAILURE": "red", "ERROR": "red", "PENDING": "pending",
+            "EXPECTED": "pending", "NONE": "none"}
+
+
+def ev(group: str, key: str, kind: str, text: str, high: bool = False) -> dict:
+    return {"group": group, "key": key, "kind": kind, "text": text, "high": high}
+
+
+def pr_label(key: str, pr: dict) -> str:
+    title = (pr.get("title") or "")[:45]
+    return f"{key} {title!r}" if title else key
+
+
+def diff_pr(key: str, a: dict | None, b: dict | None) -> list[dict]:
+    E: list[dict] = []
+    if b is None:
+        return [ev("prs", key, "untracked", f"{key}: no longer tracked")]
+    lbl = pr_label(key, b)
+    if b.get("error"):
+        if not (a or {}).get("error"):
+            E.append(ev("prs", key, "fetch_error", f"{lbl}: fetch failed ({b['error']}), showing last known state"))
+        if not b.get("title"):
+            return E
+    if a is None or not a.get("title"):
+        ci = CI_COLOR.get(b["ci"]["state"], b["ci"]["state"])
+        return E + [ev("prs", key, "tracked",
+                       f"{lbl}: now tracked [{b['state'].lower()}, CI {ci}, review {b['reviewDecision'] or 'none'}]")]
+    if b.get("stale"):
+        return E
+
+    if b["merged"] and not a["merged"]:
+        E.append(ev("prs", key, "merged", f"{lbl}: MERGED"))
+    elif b["state"] != a["state"]:
+        E.append(ev("prs", key, "state", f"{lbl}: {a['state'].lower()} -> {b['state'].lower()}"))
+    if b["isDraft"] != a["isDraft"]:
+        E.append(ev("prs", key, "draft", f"{lbl}: {'marked draft' if b['isDraft'] else 'ready for review'}"))
+
+    ca, cb = CI_COLOR.get(a["ci"]["state"], "?"), CI_COLOR.get(b["ci"]["state"], "?")
+    fails = ", ".join(b["ci"]["failing"][:3]) + (" …" if len(b["ci"]["failing"]) > 3 else "")
+    if cb != ca and not b["merged"]:
+        if cb == "red":
+            E.append(ev("prs", key, "ci_red", f"{lbl}: CI went RED ({fails or 'failure'})", high=True))
+        elif cb == "green":
+            E.append(ev("prs", key, "ci_green", f"{lbl}: CI went green"))
+        else:
+            E.append(ev("prs", key, "ci", f"{lbl}: CI {ca} -> {cb}"))
+    elif cb == "red":
+        new = sorted(set(b["ci"]["failing"]) - set(a["ci"]["failing"]))
+        if new:
+            E.append(ev("prs", key, "ci_new_failures", f"{lbl}: new failing checks: {', '.join(new[:3])}"))
+    if b.get("headSha") and a.get("headSha") and b["headSha"] != a["headSha"]:
+        E.append(ev("prs", key, "pushed", f"{lbl}: new commits pushed ({b['headSha'][:8]})"))
+
+    if b["reviewDecision"] != a["reviewDecision"]:
+        E.append(ev("prs", key, "review_decision",
+                    f"{lbl}: review {a['reviewDecision'] or 'none'} -> {b['reviewDecision'] or 'none'}"))
+    ra = {(r["author"], r["state"], r["at"]) for r in a["reviews"]}
+    for r in b["reviews"]:
+        if (r["author"], r["state"], r["at"]) not in ra and r["state"] in ("APPROVED", "CHANGES_REQUESTED"):
+            what = "approved" if r["state"] == "APPROVED" else "CHANGES REQUESTED"
+            E.append(ev("prs", key, "review", f"{lbl}: {what} by {r['author']}"))
+
+    qa, qb = a.get("mergeQueue"), b.get("mergeQueue")
+    if qb and not qa:
+        E.append(ev("prs", key, "queued", f"{lbl}: entered merge queue at #{qb['position']}"))
+    elif qa and not qb and not b["merged"]:
+        why = (b.get("lastRemovedFromQueue") or {}).get("reason") or "no reason given"
+        E.append(ev("prs", key, "dequeued", f"{lbl}: DROPPED from merge queue ({why})", high=True))
+    elif qa and qb and qa["state"] != qb["state"] and qb["state"] == "UNMERGEABLE":
+        E.append(ev("prs", key, "queue_unmergeable", f"{lbl}: unmergeable in merge queue"))
+
+    msa, msb = a["mergeStateStatus"], b["mergeStateStatus"]
+    if msa != msb and "UNKNOWN" not in (msa, msb) and not b["merged"] and msb in ("DIRTY", "BEHIND", "CLEAN", "BLOCKED"):
+        E.append(ev("prs", key, "merge_state", f"{lbl}: merge state {msa.lower()} -> {msb.lower()}"))
+
+    seen = {c["id"] for c in a["comments"]}
+    seen_digger = {d["id"] for d in a.get("digger", [])}
+    digger_ids = {d["id"] for d in b.get("digger", [])}
+    for d in b.get("digger", []):
+        if d["id"] in seen_digger:
+            continue
+        if d["plain"]:
+            E.append(ev("prs", key, "digger_apply_plain",
+                        f"{lbl}: PLAIN `digger apply` (all projects) by {d['author']}", high=True))
+        else:
+            E.append(ev("prs", key, f"digger_{d['verb']}", f"{lbl}: `{d['command'][:80]}` by {d['author']}"))
+    for c in b["comments"]:
+        if c["id"] not in seen and c["id"] not in digger_ids:
+            E.append(ev("prs", key, "comment", f"{lbl}: comment by {c['author']}: {c['line'][:100]}"))
+    return E
+
+
+def agent_label(x: dict) -> str:
+    name = x.get("name") or x["pane"]
+    return f"{name} [{x['workspace']}]" + (f" {x['title'][:50]!r}" if x.get("title") else "")
+
+
+def diff_agent(key: str, a: dict | None, b: dict | None) -> list[dict]:
+    if b is None:
+        return [ev("agents", key, "gone", f"{agent_label(a)}: gone")]
+    lbl = agent_label(b)
+    if a is None:
+        if b["status"] == "blocked":
+            return [ev("agents", key, "blocked", f"{lbl}: new agent, BLOCKED (needs approval/answer)", high=True)]
+        return [ev("agents", key, "new", f"{lbl}: new agent ({b['status']})")]
+    if b.get("stale"):
+        return []
+    sa, sb = a["status"], b["status"]
+    E = []
+    if sa != sb:
+        if sb == "blocked":
+            E.append(ev("agents", key, "blocked", f"{lbl}: BLOCKED (needs approval/answer)", high=True))
+        elif sa == "working" and sb in ("idle", "done"):
+            E.append(ev("agents", key, "finished", f"{lbl}: finished ({sa} -> {sb})"))
+        elif sa == "blocked":
+            E.append(ev("agents", key, "unblocked", f"{lbl}: unblocked ({sb})"))
+        elif sb == "working":
+            E.append(ev("agents", key, "started", f"{lbl}: started working"))
+        elif {sa, sb} != {"idle", "done"}:  # idle<->done is just "seen" bookkeeping
+            E.append(ev("agents", key, "status", f"{lbl}: {sa} -> {sb}"))
+    elif sb != "working" and a.get("outputHash") and b.get("outputHash") and a["outputHash"] != b["outputHash"]:
+        E.append(ev("agents", key, "output", f"{lbl}: new output while {sb}"))
+    return E
+
+
+def diff_items(a: list[dict], b: list[dict]) -> list[dict]:
+    A, B = {i["id"]: i for i in a}, {i["id"]: i for i in b}
+    E = []
+    for k in B.keys() - A.keys():
+        E.append(ev("items", k, "added", f"{B[k].get('title', k)}: added (owner {B[k].get('owner') or '-'}, next: {B[k].get('next') or '-'})"))
+    for k in A.keys() - B.keys():
+        E.append(ev("items", k, "removed", f"{A[k].get('title', k)}: removed"))
+    for k in A.keys() & B.keys():
+        for f in ("owner", "next", "note"):
+            if A[k].get(f) != B[k].get(f):
+                E.append(ev("items", k, f, f"{B[k].get('title', k)}: {f} -> {B[k].get(f) or '-'}"))
+    return E
+
+
+def compute_diff(prev: dict, cur: dict) -> list[dict]:
+    E: list[dict] = []
+    pp, cp = prev.get("prs", {}), cur.get("prs", {})
+    for k in sorted(pp.keys() | cp.keys()):
+        E += diff_pr(k, pp.get(k), cp.get(k))
+    pa, ca = prev.get("agents", {}), cur.get("agents", {})
+    if cur.get("agentsError") and not prev.get("agentsError"):
+        E.append(ev("agents", "herdr", "fetch_error", f"herdr: {cur['agentsError']}"))
+    for k in sorted(pa.keys() | ca.keys(), key=lambda k: ((ca.get(k) or pa.get(k))["workspace"], k)):
+        E += diff_agent(k, pa.get(k), ca.get(k))
+    for name in sorted(set(cur.get("missingTrackedAgents", [])) - set(prev.get("missingTrackedAgents", []))):
+        E.append(ev("agents", name, "tracked_missing", f"{name}: tracked agent not found in herdr"))
+    E += diff_items(prev.get("items", []), cur.get("items", []))
+    return E
+
+
+def print_diff(events: list[dict], prev: dict, cur: dict, as_json: bool) -> None:
+    if as_json:
+        print(json.dumps({"from": prev.get("takenAt"), "to": cur.get("takenAt"), "events": events}, indent=1, ensure_ascii=False))
+        return
+    print(f"coord diff {prev.get('takenAt')} -> {cur.get('takenAt')}")
+    if not events:
+        print("no changes")
+        return
+    for group, title in (("prs", "PRs"), ("agents", "Agents"), ("items", "Items")):
+        g = [e for e in events if e["group"] == group]
+        if g:
+            print(f"\n{title}:")
+            for e in g:
+                print(f"  {'!' if e['high'] else '-'} {e['text']}")
+
+
+# --------------------------------------------------------------------------
+# Notifications and launchd
+
+
+def notify(title: str, msg: str) -> None:
+    tn = shutil.which("terminal-notifier")
+    if tn:
+        subprocess.run([tn, "-title", title, "-message", msg, "-group", f"coord-{hash(msg)}"], capture_output=True)
+        return
+    # Pass text as argv so nothing is interpreted as AppleScript.
+    script = "on run argv\ndisplay notification (item 2 of argv) with title (item 1 of argv)\nend run"
+    subprocess.run(["osascript", "-e", script, title, msg], capture_output=True)
+
+
+def launchctl(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["launchctl", *args], capture_output=True, text=True)
+
+
+def watch_install() -> None:
+    if sys.platform != "darwin":
+        die("--install is macOS only")
+    if not PLIST_SRC.exists():
+        die(f"{PLIST_SRC} missing; run `chezmoi apply` first")
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    PLIST_DST.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(PLIST_SRC, PLIST_DST)
+    dom = f"gui/{os.getuid()}"
+    launchctl("bootout", f"{dom}/{LAUNCHD_LABEL}")
+    p = launchctl("bootstrap", dom, str(PLIST_DST))
+    if p.returncode != 0:
+        die(f"launchctl bootstrap failed: {p.stderr.strip()}")
+    print(f"installed {PLIST_DST}; runs `coord watch` every 5 min, log: {LOG_FILE}")
+
+
+def watch_uninstall() -> None:
+    launchctl("bootout", f"gui/{os.getuid()}/{LAUNCHD_LABEL}")
+    if PLIST_DST.exists():
+        PLIST_DST.unlink()
+    print("uninstalled coord watch LaunchAgent")
+
+
+def watch_status() -> None:
+    p = launchctl("print", f"gui/{os.getuid()}/{LAUNCHD_LABEL}")
+    if p.returncode != 0:
+        print("not installed")
+        return
+    for line in p.stdout.splitlines():
+        if re.search(r"^\s*(state|last exit code|run interval|runs) =", line):
+            print(line.strip())
+
+
+def trim_log() -> None:
+    try:
+        if LOG_FILE.stat().st_size > 1_000_000:
+            LOG_FILE.write_text(LOG_FILE.read_text()[-200_000:])
+    except FileNotFoundError:
+        pass
+
+
+# --------------------------------------------------------------------------
+# Commands
+
+
+def cmd_add(args) -> None:
+    items = load_items()
+    if args.kind == "pr":
+        if len(args.what) != 2:
+            die("usage: coord add pr <owner/repo> <number>")
+        repo, num = args.what
+        if "/" not in repo:
+            die("repo must be owner/repo")
+        num = int(num.lstrip("#"))
+        it = {"id": f"{repo}#{num}", "kind": "pr", "repo": repo, "number": num}
+    elif args.kind == "agent":
+        if len(args.what) != 1:
+            die("usage: coord add agent <name|pane_id>")
+        it = {"id": f"agent:{args.what[0]}", "kind": "agent", "agent": args.what[0]}
+    else:
+        title = " ".join(args.what)
+        if not title:
+            die("usage: coord add item <title> [--owner X] [--next Y]")
+        it = {"id": f"item:{args.id or slug(title)}", "kind": "item", "title": title}
+    it.update({k: v for k, v in (("note", args.note), ("owner", args.owner), ("next", args.next)) if v})
+    it["added"] = now_iso()
+    if any(i["id"] == it["id"] for i in items):
+        die(f"{it['id']} is already tracked (use `coord edit`)")
+    items.append(it)
+    save_items(items)
+    print(f"tracking {it['id']}")
+
+
+def cmd_edit(args) -> None:
+    items = load_items()
+    it = find_item(items, args.ref)
+    for f in ("note", "owner", "next"):
+        v = getattr(args, f)
+        if v is not None:
+            it[f] = v or None
+    save_items(items)
+    print(f"updated {it['id']}")
+
+
+def cmd_rm(args) -> None:
+    items = load_items()
+    it = find_item(items, args.ref)
+    save_items([i for i in items if i is not it])
+    print(f"untracked {it['id']}")
+
+
+def cmd_ls(args) -> None:
+    items = load_items()
+    snap = load_json(LATEST) or {}
+    if args.json:
+        print(json.dumps({"items": items, "snapshotAt": snap.get("takenAt")}, indent=1, ensure_ascii=False))
+        return
+    if not items:
+        print(f"nothing tracked ({ITEMS_FILE})")
+        return
+    agents = list(snap.get("agents", {}).values())
+    for it in items:
+        extra = ""
+        if it["kind"] == "pr" and it["id"] in snap.get("prs", {}):
+            p = snap["prs"][it["id"]]
+            if p.get("title"):
+                q = f", queue #{p['mergeQueue']['position']}" if p.get("mergeQueue") else ""
+                extra = (f"  {p['title'][:50]!r} [{'merged' if p['merged'] else p['state'].lower()}, "
+                         f"CI {CI_COLOR.get(p['ci']['state'], '?')}, {(p['reviewDecision'] or 'no review').lower()}{q}]")
+        elif it["kind"] == "agent":
+            m = [a for a in agents if it["agent"] in (a.get("name"), a["pane"])]
+            extra = f"  [{m[0]['status']}] {m[0]['workspace']}" if m else "  [not seen]"
+        elif it["kind"] == "item":
+            extra = f"  {it.get('title')!r} owner={it.get('owner') or '-'} next={it.get('next') or '-'}"
+        note = f"  — {it['note']}" if it.get("note") else ""
+        print(f"{it['id']}{extra}{note}")
+    if snap:
+        print(f"(state as of {snap['takenAt']})")
+
+
+def cmd_snapshot(args) -> None:
+    with Lock():
+        snap = take_snapshot()
+    errs = [k for k, v in snap["prs"].items() if v.get("error")]
+    print(f"{LATEST}: {len(snap['prs'])} PRs, {len(snap['agents'])} agents, {len(snap['items'])} items"
+          + (f"; errors: {', '.join(errs)}" if errs else "")
+          + (f"; herdr: {snap['agentsError']}" if snap["agentsError"] else ""))
+
+
+def cmd_diff(args) -> None:
+    cur = load_json(LATEST)
+    if args.since:
+        since = parse_time(args.since)
+        base = None
+        for p in history():
+            s = load_json(p)
+            if s and snap_time(s) >= since:
+                base = s
+                break
+        if base is None or not cur or base["takenAt"] == cur["takenAt"]:
+            print(f"no snapshot since {since.isoformat(timespec='seconds')} older than the latest; nothing to compare")
+            return
+        oldest = load_json(history()[0])
+        if oldest and oldest["takenAt"] == base["takenAt"] and since < snap_time(base):
+            print(f"note: history starts at {base['takenAt']} (kept {HISTORY_HOURS}h)", file=sys.stderr)
+        prev = base
+    else:
+        prev = load_json(PREVIOUS)
+    if not cur or not prev:
+        print("need two snapshots: run `coord snapshot` (twice)")
+        return
+    print_diff(compute_diff(prev, cur), prev, cur, args.json)
+
+
+def cmd_sweep(args) -> None:
+    """Diff against the snapshot the previous sweep ended at, then move the marker."""
+    with Lock():
+        cur = load_json(LATEST) if args.no_snapshot else take_snapshot()
+        if not cur:
+            die("no snapshot yet: run `coord snapshot`")
+        base = load_json(SWEEP_BASE)
+        if not base:
+            write_json(SWEEP_BASE, cur)
+            print(f"first sweep: marker set at {cur['takenAt']}; next `coord sweep` shows changes since then")
+            return
+        print_diff(compute_diff(base, cur), base, cur, args.json)
+        write_json(SWEEP_BASE, cur)
+
+
+def cmd_watch(args) -> None:
+    if args.install:
+        return watch_install()
+    if args.uninstall:
+        return watch_uninstall()
+    if args.status:
+        return watch_status()
+    trim_log()
+    with Lock():
+        prev = load_json(LATEST)
+        cur = take_snapshot()
+    if not prev:
+        print(f"{cur['takenAt']} first snapshot taken")
+        return
+    events = compute_diff(prev, cur)
+    if events or args.json:
+        print_diff(events, prev, cur, args.json)
+    high = [e for e in events if e["high"]]
+    if args.no_notify:
+        return
+    for e in high[:4]:
+        notify("coord", e["text"])
+    if len(high) > 4:
+        notify("coord", f"{len(high) - 4} more alerts: run `coord diff`")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(prog="coord", description=__doc__.split("\n\n")[0])
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("add", help="track a PR, herdr agent or free-form item")
+    p.add_argument("kind", choices=["pr", "agent", "item"])
+    p.add_argument("what", nargs="*")
+    p.add_argument("--note")
+    p.add_argument("--owner")
+    p.add_argument("--next", help="next step")
+    p.add_argument("--id", help="custom id for free-form items")
+    p.set_defaults(fn=cmd_add)
+
+    p = sub.add_parser("edit", help="change note/owner/next of a tracked item ('' clears)")
+    p.add_argument("ref")
+    p.add_argument("--note")
+    p.add_argument("--owner")
+    p.add_argument("--next")
+    p.set_defaults(fn=cmd_edit)
+
+    p = sub.add_parser("rm", help="stop tracking (id or unique suffix, e.g. 130753)")
+    p.add_argument("ref")
+    p.set_defaults(fn=cmd_rm)
+
+    p = sub.add_parser("ls", help="list tracked items with last known state")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_ls)
+
+    p = sub.add_parser("snapshot", help="collect state into latest.json (previous kept)")
+    p.set_defaults(fn=cmd_snapshot)
+
+    p = sub.add_parser("diff", help="print changes between previous and latest snapshot")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--since", metavar="TIME",
+                   help="compare latest against the oldest snapshot at/after TIME (30m, 2h, ISO time)")
+    p.set_defaults(fn=cmd_diff)
+
+    p = sub.add_parser("sweep", help="snapshot, diff since the last sweep, move the sweep marker")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--no-snapshot", action="store_true", help="use the latest snapshot instead of taking one")
+    p.set_defaults(fn=cmd_sweep)
+
+    p = sub.add_parser("watch", help="snapshot + diff + notify on high-signal events")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--no-notify", action="store_true")
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--install", action="store_true", help="load the LaunchAgent (every 5 min)")
+    g.add_argument("--uninstall", action="store_true", help="unload and remove the LaunchAgent")
+    g.add_argument("--status", action="store_true", help="show LaunchAgent state")
+    p.set_defaults(fn=cmd_watch)
+
+    args = ap.parse_args()
+    try:
+        args.fn(args)
+    except KeyboardInterrupt:
+        sys.exit(130)
+
+
+if __name__ == "__main__":
+    main()

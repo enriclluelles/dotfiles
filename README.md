@@ -114,7 +114,24 @@ On first launch, LazyVim will automatically:
 - `<Space>gg` - Lazygit
 - `<Space>l` - Lazy plugin manager
 
-### Customizing Neovim
+### coord (coordinator state)
+
+`~/.local/bin/coord` (source: `dot_local/bin/executable_coord`, Python 3 stdlib, calls `gh` and `herdr`) collects PR and Herdr agent state so the coordinating agent only reasons about what changed.
+
+```bash
+coord add pr factorialco/factorial 130027 --note "routines"   # also: add agent <name>, add item <title> --owner X --next Y
+coord ls                       # tracked items + last known state (items in ~/.config/coord/items.yaml)
+coord snapshot                 # ~/.local/state/coord/latest.json (previous.json keeps the one before)
+coord diff --since 2h          # changes since the oldest snapshot at/after a time (30m, 2h, ISO; 24h kept)
+coord sweep                    # snapshot + changes since the last sweep, then move the sweep marker
+coord diff [--json]            # only changes: merged, CI red/green, reviews, queue drops, comments, digger apply/plan, agents finished/blocked
+coord watch                    # snapshot + diff + macOS notification for: plain `digger apply`, CI red, dropped from queue, agent blocked
+coord watch --install          # run watch every 5 min via LaunchAgent (off by default); --uninstall, --status
+```
+
+The LaunchAgent plist is placed by chezmoi at `~/.config/coord/local.coord.watch.plist`; `--install` copies it to `~/Library/LaunchAgents` and loads it. Log: `~/.local/state/coord/watch.log`.
+
+## Customizing Neovim
 
 The Neovim configuration can be customized by editing files in `~/.config/nvim/lua/`:
 

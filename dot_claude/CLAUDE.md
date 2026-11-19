@@ -12,3 +12,9 @@ Write PR descriptions a reviewer can read in a minute: plain words, short, to th
 - `## Notes`: only decisions or open points the reviewer should weigh. Leave it out when there are none.
 
 No other headings, no filler, no attribution lines. This format overrides a repository's own PR description format.
+
+# Replies and decisions
+
+- Keep replies short by default: a few lines or bullets. No long paragraphs unless asked.
+- If an answer needs to be long (a report, plan, comparison or explainer), write a local one-page HTML file and open it, with a two-line summary in chat. Local only, never published.
+- Distill every choice the user has to make into a structured question (AskUserQuestion, or the harness equivalent): at most 4, recommended option first, each self-contained. Do not bury decisions in prose.

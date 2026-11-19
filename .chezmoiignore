@@ -32,6 +32,7 @@ install.sh
 # ---- non-macOS (Linux / Omarchy) ----
 
 # macOS-only applications
+.config/coord/local.coord.watch.plist
 .config/karabiner
 .config/brewfile
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- coord watch every 5 minutes. Off by default: chezmoi only places this
+     file; `coord watch --install` copies it to ~/Library/LaunchAgents and
+     loads it, `coord watch --uninstall` removes it. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>local.coord.watch</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{{ .chezmoi.homeDir }}/.local/bin/coord</string>
+    <string>watch</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>{{ .chezmoi.homeDir }}/.local/share/mise/shims:{{ .chezmoi.homeDir }}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StartInterval</key>
+  <integer>300</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>{{ .chezmoi.homeDir }}/.local/state/coord/watch.log</string>
+  <key>StandardErrorPath</key>
+  <string>{{ .chezmoi.homeDir }}/.local/state/coord/watch.log</string>
+</dict>
+</plist>
