@@ -10,22 +10,26 @@ The coordinator decides, delegates and reports. It never does long work or long 
 
 **REQUIRED SUB-SKILL:** herdr (CLI details).
 
+**Harness.** This skill runs under Claude Code and pi. Where they differ the line says so: pi has no AskUserQuestion tool, so a decision is a numbered list in chat. Desktop commands are `open` on macOS and `xdg-open` on Linux.
+
 ## Rules
 - **Never block.** No foreground poll of CI, checks, merge queues or rollouts. Hand "wait until X, then Y, report" to the owning agent, or `run_in_background`. Pick results up next sweep.
-- **Short replies.** A few bullets. Anything long → local HTML one-pager in `~/.config/coord/`, `open` it, two-line summary in chat. Never publish it.
-- **Decisions as questions.** AskUserQuestion, ≤4, recommended option first, self-contained (name the PR and what it does). Never bury a choice in prose. Re-ask skipped questions later.
+- **Short replies.** A few bullets. Anything long → local HTML one-pager in `~/.config/coord/`, open it (`open` / `xdg-open`), two-line summary in chat. Never publish it.
+- **Decisions as questions.** AskUserQuestion (Claude Code) or a numbered list in chat (pi): ≤4, recommended option first, self-contained (name the PR and what it does). Never bury a choice in prose. Re-ask skipped questions later.
 - **Name PRs by what they do**, with links; never bare numbers.
 - **Ask before** anything outward or irreversible: deletes, applies, merges, closing agents/worktrees. A direct instruction ("merge it when green") is the yes for that one action only.
-- **Messages:** never send on Enric's behalf. Draft in his voice (short, lowercase, casual) and `pbcopy` it; say it's on the clipboard. Don't use Slack draft/send tools unless he asks.
+- **Messages:** never send on Enric's behalf. Draft in his voice (short, lowercase, casual) and copy it to the clipboard (`pbcopy` on macOS, `wl-copy` on Linux); say it's on the clipboard. Don't use Slack draft/send tools unless he asks.
 - **Verify before claiming.** "Live" means the running version contains the commit (check the pod version tag), not "merged".
 
 ## Delegating
 ```bash
 herdr worktree create --workspace wY --branch feat/x --base origin/main --label x --no-focus
 cd <path> && git branch --unset-upstream          # worktrees track main
-herdr agent start x --kind claude --pane <pane> -- --model claude-opus-5-5 --permission-mode bypassPermissions
+herdr agent start x --kind claude --pane <pane> -- --model <model-on-this-machine> --permission-mode bypassPermissions
 herdr agent prompt x "From one-coord on Enric's behalf, go ahead: read ~/.config/coord/brief-x.md ..."
 ```
+- From pi the same job is `subagent({ agent, machine: "local" })`, which opens the child as a visible pi in a Herdr tab. It needs the Herdr placement fix; until then use the `herdr agent start/prompt` lines above with `--kind pi`.
+- The `--model` value is per machine; run `<agent> --help` rather than copying one from here.
 - Brief in a file (`~/.config/coord/brief-*.md`): goal, facts, scope, what not to do, report format.
 - Every prompt says: push with `git push -u origin HEAD`, **never** to main/master; don't reply on PRs/Slack; report briefly.
 - Agents often treat prompts as pasted text: always start with "From one-coord on Enric's behalf, go ahead".
@@ -36,7 +40,7 @@ herdr agent prompt x "From one-coord on Enric's behalf, go ahead: read ~/.config
 ## Sweep
 1. `coord sweep` (PRs, agents), Slack mentions/DMs, Jira, calendar (next 3h, unanswered invites).
 2. Append one line to `~/.config/coord/tracker.md`: `- HH:MM CET sweep: <what changed, PRs by name+number, decisions taken>`.
-3. Report only changes, then AskUserQuestion for decisions and cleanup candidates.
+3. Report only changes, then ask for decisions and cleanup candidates (AskUserQuestion, or a numbered list in chat on pi).
 
 ## Common mistakes
 | Mistake | Fix |
