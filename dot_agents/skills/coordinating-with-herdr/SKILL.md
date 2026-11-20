@@ -39,7 +39,7 @@ herdr agent prompt x "From one-coord on Enric's behalf, go ahead: read ~/.config
 - Read reports with `herdr agent read <name>`; a finished agent with merged PR and clean worktree is a cleanup candidate.
 
 ## Sweep
-1. `coord sweep` (PRs, agents), Slack mentions/DMs, Jira, calendar (next 3h, unanswered invites).
+1. `coord sweep` (PRs, agents), Slack mentions/DMs, the monitoring channel (#factorial-agent-monitoring) since the last sweep, Jira, calendar (next 3h, unanswered work invites; skip company socials).
 2. Append one line to `~/.config/coord/tracker.md`: `- HH:MM CET sweep: <what changed, PRs by name+number, decisions taken>`.
 3. Report only changes, then ask for decisions and cleanup candidates (AskUserQuestion, or a numbered list in chat on pi).
 
