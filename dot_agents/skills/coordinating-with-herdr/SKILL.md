@@ -40,6 +40,7 @@ herdr agent prompt x "From one-coord on Enric's behalf, go ahead: read ~/.config
 
 ## Sweep
 1. `coord sweep` (PRs, agents), Slack mentions/DMs, the monitoring channel (#factorial-agent-monitoring) since the last sweep, Jira, calendar (next 3h, unanswered work invites; skip company socials).
+   Review asks: in #team-one-core and #team-platform-ai-building-blocks-devs, others' PR links asking for review → `coord add`, ask per PR whether to start a Herdr review agent (verdict, risks, draft comments Enric posts himself); flag asks waiting >1 day.
 2. Append one line to `~/.config/coord/tracker.md`: `- HH:MM CET sweep: <what changed, PRs by name+number, decisions taken>`.
 3. Report only changes, then ask for decisions and cleanup candidates (AskUserQuestion, or a numbered list in chat on pi).
 
